@@ -1,0 +1,6 @@
+{
+  "name": "CareTransition AI",
+  "description": "Multi-agent orchestration system for patient care transitions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

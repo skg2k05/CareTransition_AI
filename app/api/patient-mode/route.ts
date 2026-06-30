@@ -30,7 +30,8 @@ Rules:
 2. Target a 5th-grade reading level. Use extremely simple, clear words. Avoid medical jargon. If you must use a medical term, define it simply in parentheses.
 3. Make the tone warm, comforting, encouraging, and clear.
 4. Fill in the requested JSON structure. Keep instructions highly actionable and clear.
-5. Create a seamless spoken narration script (narrationScript) in "${selectedLanguage}" that will be read aloud to the patient using text-to-speech. Make it sound extremely natural, friendly, slow, and easy to follow.`;
+5. Create a seamless spoken narration script (narrationScript) in "${selectedLanguage}" that will be read aloud to the patient using text-to-speech. Make it sound extremely natural, friendly, slow, and easy to follow.
+6. For Indian languages (Hindi, Kannada, Tamil, Telugu, etc.), use natural conversational style that a rural patient would understand. Avoid overly formal or bookish language. Use common everyday terms instead of complex medical vocabulary.`;
 
     const prompt = `Here is the complex medical transition report:
 ${JSON.stringify(report, null, 2)}

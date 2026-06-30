@@ -143,6 +143,7 @@ export default function ReportView({ report }: ReportViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPatientMode, selectedLanguage]);
 
+  // ─── INDIAN LANGUAGE VOICE MAPPING ─────────────────────────────────────
   const startNarration = (text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     const synth = window.speechSynthesis;
@@ -150,19 +151,34 @@ export default function ReportView({ report }: ReportViewProps) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     
-    let langCode = 'en-US';
-    if (selectedLanguage === 'Spanish') langCode = 'es-ES';
-    else if (selectedLanguage === 'Mandarin') langCode = 'zh-CN';
-    else if (selectedLanguage === 'Cantonese') langCode = 'zh-HK';
-    else if (selectedLanguage === 'Tagalog') langCode = 'fil-PH';
-    else if (selectedLanguage === 'Vietnamese') langCode = 'vi-VN';
-    else if (selectedLanguage === 'Arabic') langCode = 'ar-SA';
-    else if (selectedLanguage === 'French') langCode = 'fr-FR';
+    // Indian language voice mapping
+    const langMap: Record<string, string> = {
+      'English': 'en-IN',
+      'Hindi': 'hi-IN',
+      'Kannada': 'kn-IN',
+      'Tamil': 'ta-IN',
+      'Telugu': 'te-IN',
+      'Bengali': 'bn-IN',
+      'Marathi': 'mr-IN',
+      'Gujarati': 'gu-IN',
+      'Malayalam': 'ml-IN',
+      'Punjabi': 'pa-IN',
+      'Urdu': 'ur-IN',
+      'Odia': 'or-IN'
+    };
 
+    const langCode = langMap[selectedLanguage] || 'en-IN';
     utterance.lang = langCode;
+    utterance.rate = 0.9;   // Slightly slower for clarity
+    utterance.pitch = 1.0;
 
+    // Try to find best matching voice
     const voices = synth.getVoices();
-    const voice = voices.find(v => v.lang.startsWith(langCode));
+    const voice = voices.find(v => v.lang === langCode) || 
+                 voices.find(v => v.lang.startsWith(langCode.split('-')[0])) ||
+                 voices.find(v => v.lang === 'en-IN') ||
+                 voices[0];
+    
     if (voice) {
       utterance.voice = voice;
     }
@@ -396,6 +412,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                  {/* ─── INDIAN LANGUAGE SELECTOR ───────────────────────── */}
                   <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-850 transition-colors">
                     <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <select
@@ -403,14 +420,21 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
                       className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none border-none cursor-pointer pr-1"
                     >
+                      {/* Top 3 Priority */}
                       <option value="English">English</option>
-                      <option value="Spanish">Español (Spanish)</option>
-                      <option value="Mandarin">中文 (Mandarin)</option>
-                      <option value="Cantonese">粵語 (Cantonese)</option>
-                      <option value="Tagalog">Tagalog (Filipino)</option>
-                      <option value="Vietnamese">Tiếng Việt (Vietnamese)</option>
-                      <option value="Arabic">العربية (Arabic)</option>
-                      <option value="French">Français (French)</option>
+                      <option value="Hindi">हिन्दी (Hindi)</option>
+                      <option value="Kannada">ಕನ್ನಡ (Kannada)</option>
+                      
+                      {/* Other Indian Languages */}
+                      <option value="Tamil">தமிழ் (Tamil)</option>
+                      <option value="Telugu">తెలుగు (Telugu)</option>
+                      <option value="Bengali">বাংলা (Bengali)</option>
+                      <option value="Marathi">मराठी (Marathi)</option>
+                      <option value="Gujarati">ગુજરાતી (Gujarati)</option>
+                      <option value="Malayalam">മലയാളം (Malayalam)</option>
+                      <option value="Punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
+                      <option value="Urdu">اردو (Urdu)</option>
+                      <option value="Odia">ଓଡ଼ିଆ (Odia)</option>
                     </select>
                   </div>
 
@@ -488,7 +512,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     <div className="lg:col-span-2 space-y-6">
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2 font-mono">👋 Welcome Home Summary</span>
-                        {/* FIX: Safe render welcomeMessage */}
                         <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-sans font-medium">
                           {renderString(patientData.welcomeMessage)}
                         </p>
@@ -498,7 +521,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3 font-mono">📋 My Checklist (Check items as you do them!)</span>
                         
                         <div className="space-y-2.5">
-                          {/* FIX: Handle both dailyChecklist and checklist field names */}
                           {renderArray(patientData.dailyChecklist || patientData.checklist).map((task: string, i: number) => {
                             const isChecked = !!patientCheckedTasks[i];
                             return (
@@ -537,7 +559,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                         </div>
                         
                         <div className="space-y-3">
-                          {/* FIX: Safe render medication fields */}
                           {(patientData.medications || []).map((m: any, i: number) => (
                             <div key={i} className="bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3 rounded-xl space-y-1 shadow-sm transition-colors">
                               <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
@@ -564,11 +585,9 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                         </div>
                         
                         <div className="space-y-2.5">
-                          {/* FIX: Safe render appointments (now strings) */}
                           {renderArray(patientData.appointments).map((appt: string, i: number) => (
                             <div key={i} className="bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex gap-2.5 items-start shadow-sm transition-colors">
                               <span className="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400 mt-1.5 shrink-0" />
-                              {/* FIX: Safe render appointment string */}
                               <p className="text-xs text-slate-700 dark:text-slate-300 font-bold leading-relaxed">{appt}</p>
                             </div>
                           ))}
@@ -578,7 +597,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                         </div>
                       </div>
 
-                      {/* FIX: Safe render supportAndRides */}
                       {renderArray(patientData.supportAndRides || patientData.support).length > 0 && (
                         <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                           <div className="flex items-center gap-2 mb-3">

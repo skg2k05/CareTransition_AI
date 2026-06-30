@@ -54,7 +54,7 @@ Please simplify and translate this report to "${selectedLanguage}" at a 5th-grad
               type: Type.STRING,
               description: "A very clear, simple explanation of the patient's condition, why they were in the hospital, and what the main goals are now. Written at a 5th-grade level."
             },
-            checklist: {
+            dailyChecklist: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
               description: "A checklist of 3-5 critical, simple daily tasks for the patient (e.g., 'Check your weight first thing in the morning', 'Avoid eating salty foods')."
@@ -65,27 +65,19 @@ Please simplify and translate this report to "${selectedLanguage}" at a 5th-grad
                 type: Type.OBJECT,
                 properties: {
                   name: { type: Type.STRING, description: "Simple/brand name of the medicine." },
-                  purpose: { type: Type.STRING, description: "What this medicine does in simple terms (e.g., 'Helps lower your blood pressure')." },
+                  reason: { type: Type.STRING, description: "What this medicine does in simple terms (e.g., 'Helps lower your blood pressure')." },
                   instructions: { type: Type.STRING, description: "When and how to take it (e.g., 'Take one tablet by mouth every morning with a full glass of water')." }
                 },
-                required: ["name", "purpose", "instructions"]
+                required: ["name", "reason", "instructions"]
               },
               description: "The list of medications simplified for a patient."
             },
             appointments: {
               type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  who: { type: Type.STRING, description: "The doctor or clinic name (e.g., 'Dr. Green (Heart Doctor)')." },
-                  when: { type: Type.STRING, description: "The time or timeframe of the visit (e.g., 'Within 5 days')." },
-                  why: { type: Type.STRING, description: "The simple reason for the visit (e.g., 'To check how your heart is pumping')." }
-                },
-                required: ["who", "when", "why"]
-              },
-              description: "Simplified upcoming clinic follow-ups."
+              items: { type: Type.STRING },
+              description: "Simplified upcoming clinic follow-ups as readable strings (e.g., 'Dr. Green (Heart Doctor) - Within 5 days - To check how your heart is pumping')."
             },
-            support: {
+            supportAndRides: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
               description: "Simple support resources and tips, including SDoH-related help (e.g., 'If you need a free ride, call Social Work at 555-0199', 'Ask your daughter to help fill your pill box')."
@@ -95,7 +87,7 @@ Please simplify and translate this report to "${selectedLanguage}" at a 5th-grad
               description: "A fully continuous, cohesive, spoken-script version of this entire guide. It will be read aloud to the patient, so make it sound very natural, slow-paced, clear, comforting, and direct."
             }
           },
-          required: ["welcomeMessage", "patientSummary5thGrade", "checklist", "medications", "appointments", "support", "narrationScript"]
+          required: ["welcomeMessage", "patientSummary5thGrade", "dailyChecklist", "medications", "appointments", "supportAndRides", "narrationScript"]
         }
       }
     });

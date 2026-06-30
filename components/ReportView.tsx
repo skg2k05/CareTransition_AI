@@ -60,6 +60,18 @@ interface ReportViewProps {
   };
 }
 
+// Safe rendering helpers
+const renderString = (value: any): string => {
+  if (typeof value === 'string') return value;
+  if (value === null || value === undefined) return '';
+  return JSON.stringify(value);
+};
+
+const renderArray = (arr: any[] | undefined): string[] => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(item => typeof item === 'string' ? item : JSON.stringify(item));
+};
+
 export default function ReportView({ report }: ReportViewProps) {
   const [copied, setCopied] = useState(false);
   const [checkedTasks, setCheckedTasks] = useState<Record<number, boolean>>({});
@@ -86,7 +98,6 @@ export default function ReportView({ report }: ReportViewProps) {
   }, []);
 
   const fetchPatientModeData = async (lang: string) => {
-    // Await a microtask to ensure state updates happen asynchronously relative to the useEffect trigger
     await Promise.resolve();
     setIsLoadingPatient(true);
     setPatientError(null);
@@ -114,7 +125,6 @@ export default function ReportView({ report }: ReportViewProps) {
 
   useEffect(() => {
     if (isPatientMode) {
-      // Trigger fetch inside microtask asynchronous frame
       const triggerFetch = async () => {
         await fetchPatientModeData(selectedLanguage);
       };
@@ -140,7 +150,6 @@ export default function ReportView({ report }: ReportViewProps) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Choose voice based on language
     let langCode = 'en-US';
     if (selectedLanguage === 'Spanish') langCode = 'es-ES';
     else if (selectedLanguage === 'Mandarin') langCode = 'zh-CN';
@@ -152,7 +161,6 @@ export default function ReportView({ report }: ReportViewProps) {
 
     utterance.lang = langCode;
 
-    // Load voices and try matching
     const voices = synth.getVoices();
     const voice = voices.find(v => v.lang.startsWith(langCode));
     if (voice) {
@@ -316,7 +324,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
   return (
     <div id="report-view-container" className="space-y-6">
       
-      {/* View Switcher Tabs: Clinical Overview vs Patient-Friendly Mode */}
+      {/* View Switcher Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md transition-colors duration-200">
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -356,7 +364,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
 
       <AnimatePresence mode="wait">
         {isPatientMode ? (
-          /* PATIENT-FRIENDLY INTERACTIVE REPORT (PATIENT MODE) */
+          /* PATIENT-FRIENDLY INTERACTIVE REPORT */
           <motion.div
             key="patient-view"
             initial={{ opacity: 0, y: 15 }}
@@ -387,10 +395,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                   </div>
                 </div>
 
-                {/* Patient Mode Controls: Language & TTS Narration */}
                 <div className="flex flex-wrap items-center gap-3">
-                  
-                  {/* Language Selector */}
                   <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-850 transition-colors">
                     <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <select
@@ -409,7 +414,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </select>
                   </div>
 
-                  {/* Audio Controls */}
                   <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-850 transition-colors">
                     <button
                       onClick={() => {
@@ -443,7 +447,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                       </button>
                     )}
                   </div>
-
                 </div>
               </div>
 
@@ -469,7 +472,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               ) : patientData ? (
                 <div className="mt-6 space-y-6">
                   
-                  {/* Active Audio Narration Feedback Banner */}
                   {isPlaying && (
                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400 animate-pulse transition-colors">
                       <span className="flex items-center gap-2 font-medium">
@@ -483,21 +485,21 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                   )}
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Welcome message & Checklist */}
                     <div className="lg:col-span-2 space-y-6">
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2 font-mono">👋 Welcome Home Summary</span>
+                        {/* FIX: Safe render welcomeMessage */}
                         <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-sans font-medium">
-                          {patientData.welcomeMessage}
+                          {renderString(patientData.welcomeMessage)}
                         </p>
                       </div>
 
-                      {/* Interactive daily checklist */}
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3 font-mono">📋 My Checklist (Check items as you do them!)</span>
                         
                         <div className="space-y-2.5">
-                          {patientData.dailyChecklist?.map((task: string, i: number) => {
+                          {/* FIX: Handle both dailyChecklist and checklist field names */}
+                          {renderArray(patientData.dailyChecklist || patientData.checklist).map((task: string, i: number) => {
                             const isChecked = !!patientCheckedTasks[i];
                             return (
                               <div
@@ -526,10 +528,8 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                       </div>
                     </div>
 
-                    {/* Medications & Schedule */}
                     <div className="space-y-6">
                       
-                      {/* Discharge Medications */}
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <div className="flex items-center gap-2 mb-3">
                           <Pill className="w-4 h-4 text-emerald-500" />
@@ -537,24 +537,26 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                         </div>
                         
                         <div className="space-y-3">
-                          {patientData.medications?.map((m: any, i: number) => (
+                          {/* FIX: Safe render medication fields */}
+                          {(patientData.medications || []).map((m: any, i: number) => (
                             <div key={i} className="bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3 rounded-xl space-y-1 shadow-sm transition-colors">
-                              <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200">{m.name}</h4>
+                              <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
+                                {renderString(m.name)}
+                              </h4>
                               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                                <strong className="text-slate-800 dark:text-slate-300">Why I take it:</strong> {m.reason}
+                                <strong className="text-slate-800 dark:text-slate-300">Why I take it:</strong> {renderString(m.reason || m.purpose)}
                               </p>
                               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                                <strong className="text-slate-800 dark:text-slate-300">How I take it:</strong> {m.instructions}
+                                <strong className="text-slate-800 dark:text-slate-300">How I take it:</strong> {renderString(m.instructions)}
                               </p>
                             </div>
                           ))}
-                          {!patientData.medications?.length && (
+                          {!(patientData.medications || []).length && (
                             <p className="text-xs text-slate-450 italic">No medications listed for this discharge plan.</p>
                           )}
                         </div>
                       </div>
 
-                      {/* Follow-up Doctor Appointments */}
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <div className="flex items-center gap-2 mb-3">
                           <Calendar className="w-4 h-4 text-violet-500 animate-pulse" />
@@ -562,20 +564,22 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                         </div>
                         
                         <div className="space-y-2.5">
-                          {patientData.appointments?.map((appt: string, i: number) => (
+                          {/* FIX: Safe render appointments (now strings) */}
+                          {renderArray(patientData.appointments).map((appt: string, i: number) => (
                             <div key={i} className="bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex gap-2.5 items-start shadow-sm transition-colors">
                               <span className="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400 mt-1.5 shrink-0" />
+                              {/* FIX: Safe render appointment string */}
                               <p className="text-xs text-slate-700 dark:text-slate-300 font-bold leading-relaxed">{appt}</p>
                             </div>
                           ))}
-                          {!patientData.appointments?.length && (
+                          {!renderArray(patientData.appointments).length && (
                             <p className="text-xs text-slate-450 italic">No doctor appoinments scheduled.</p>
                           )}
                         </div>
                       </div>
 
-                      {/* Ride, Support & social assistance options */}
-                      {patientData.supportAndRides && (
+                      {/* FIX: Safe render supportAndRides */}
+                      {renderArray(patientData.supportAndRides || patientData.support).length > 0 && (
                         <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                           <div className="flex items-center gap-2 mb-3">
                             <HeartHandshake className="w-4 h-4 text-sky-500" />
@@ -583,7 +587,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                           </div>
                           
                           <ul className="space-y-2.5">
-                            {patientData.supportAndRides.map((help: string, i: number) => (
+                            {renderArray(patientData.supportAndRides || patientData.support).map((help: string, i: number) => (
                               <li key={i} className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/40 p-2.5 rounded-lg flex items-start gap-2 leading-relaxed transition-colors">
                                 <ChevronRight className="w-3.5 h-3.5 text-sky-500 shrink-0 mt-0.5" />
                                 <span>{help}</span>

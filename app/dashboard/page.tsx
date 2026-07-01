@@ -16,7 +16,9 @@ import {
   HeartHandshake,
   ChevronRight,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  LayoutDashboard,
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -52,6 +54,7 @@ function DashboardContent() {
   const isDoctor = role === 'doctor';
 
   // Doctor states
+  const [activeTab, setActiveTab] = useState<'analysis' | 'report'>('analysis');
   const [patientSummary, setPatientSummary] = useState(DEFAULT_SUMMARY);
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<any | null>(null);
@@ -164,9 +167,11 @@ function DashboardContent() {
         addLog('Orchestrator', 'Workflow paused for Clinician Review.', 'warn');
         setIntermediateData(data);
         setShowReviewPanel(true);
+        setActiveTab('report');
       } else {
         setReport(data);
         addLog('System', `Consensus finished in ${(data.trajectory?.totalMs / 1000).toFixed(2)}s.`, 'system');
+        setActiveTab('report');
       }
 
     } catch (err: any) {
@@ -230,6 +235,7 @@ function DashboardContent() {
       
       setReport(data);
       setShowReviewPanel(false);
+      setActiveTab('report');
       addLog('System', `Consensus finished in ${(data.trajectory?.totalMs / 1000).toFixed(2)}s.`, 'system');
 
     } catch (err: any) {
@@ -253,11 +259,12 @@ function DashboardContent() {
       synthesis: 'idle'
     });
     addLog('Orchestrator', 'Pipeline canceled by clinician.', 'info');
+    setActiveTab('analysis');
   };
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push('/auth/login');
   };
 
   // Mock patient reports for demo
@@ -289,7 +296,7 @@ function DashboardContent() {
       
       {/* Header */}
       <header className="border-b border-slate-900 bg-slate-900/30 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <Network className="w-4 h-4 text-slate-950 stroke-[2.5]" />
@@ -323,7 +330,7 @@ function DashboardContent() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-4">
+      <main className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <AnimatePresence mode="wait">
           
           {isDoctor ? (
@@ -335,49 +342,80 @@ function DashboardContent() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                
-                {/* Left Column */}
-                <div className="lg:col-span-4 space-y-4">
-                  {/* Pipeline Settings */}
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-slate-200">
-                      <Stethoscope className="w-4 h-4 text-emerald-400" />
-                      <span className="text-xs font-bold uppercase tracking-wider">Doctor Controls</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between bg-slate-950/60 p-3 rounded-lg border border-slate-850">
-                      <div className="space-y-1 pr-4">
-                        <label className="text-xs font-semibold text-slate-200 block">Clinician Review Mode</label>
-                        <p className="text-[10px] text-slate-400 leading-normal">
-                          Pause for manual verification before synthesizing.
-                        </p>
+              {/* Taskbar / Tabs */}
+              <div className="flex bg-slate-900/50 p-1 rounded-xl border border-slate-800 w-fit mb-4">
+                <button
+                  onClick={() => setActiveTab('analysis')}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === 'analysis' 
+                      ? 'bg-slate-800 text-emerald-400 shadow-md border-b border-emerald-500/20' 
+                      : 'text-slate-400 hover:text-slate-300 hover:bg-slate-800/50'
+                  }`}
+                >
+                  <Activity className="w-4 h-4" />
+                  Analysis & Tracking
+                </button>
+                <button
+                  onClick={() => setActiveTab('report')}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === 'report' 
+                      ? 'bg-slate-800 text-emerald-400 shadow-md border-b border-emerald-500/20' 
+                      : 'text-slate-400 hover:text-slate-300 hover:bg-slate-800/50'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Generated Report
+                </button>
+              </div>
+
+              {activeTab === 'analysis' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left Column */}
+                  <div className="space-y-4">
+                    {/* Pipeline Settings */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center gap-2 text-slate-200">
+                        <Stethoscope className="w-4 h-4 text-emerald-400" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Doctor Controls</span>
                       </div>
-                      <button
-                        onClick={() => setReviewModeEnabled(!reviewModeEnabled)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                          reviewModeEnabled ? 'bg-emerald-500' : 'bg-slate-800'
-                        }`}
-                      >
-                        <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-slate-950 shadow transition duration-200 ${
-                          reviewModeEnabled ? 'translate-x-4' : 'translate-x-0'
-                        }`} />
-                      </button>
+                      
+                      <div className="flex items-center justify-between bg-slate-950/60 p-3 rounded-lg border border-slate-850">
+                        <div className="space-y-1 pr-4">
+                          <label className="text-xs font-semibold text-slate-200 block">Clinician Review Mode</label>
+                          <p className="text-[10px] text-slate-400 leading-normal">
+                            Pause for manual verification before synthesizing.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setReviewModeEnabled(!reviewModeEnabled)}
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                            reviewModeEnabled ? 'bg-emerald-500' : 'bg-slate-800'
+                          }`}
+                        >
+                          <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-slate-950 shadow transition duration-200 ${
+                            reviewModeEnabled ? 'translate-x-4' : 'translate-x-0'
+                          }`} />
+                        </button>
+                      </div>
                     </div>
+
+                    <PatientInputForm 
+                      onSubmit={handleHandoffSubmit} 
+                      isLoading={isLoading || isSynthesizing || showReviewPanel} 
+                      initialValue={patientSummary} 
+                    />
                   </div>
 
-                  <PatientInputForm 
-                    onSubmit={handleHandoffSubmit} 
-                    isLoading={isLoading || isSynthesizing || showReviewPanel} 
-                    initialValue={patientSummary} 
-                  />
-                  <AuditTrail logs={logs} onClear={() => setLogs([])} />
+                  {/* Right Column */}
+                  <div className="space-y-4">
+                    <ExecutionTrajectory status={status} durations={durations} />
+                    <AuditTrail logs={logs} onClear={() => setLogs([])} />
+                  </div>
                 </div>
+              )}
 
-                {/* Right Column */}
-                <div className="lg:col-span-8 space-y-4">
-                  <ExecutionTrajectory status={status} durations={durations} />
-
+              {activeTab === 'report' && (
+                <div className="space-y-4">
                   {errorMessage && (
                     <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl flex items-start gap-3">
                       <AlertTriangle className="w-5 h-5 shrink-0 text-rose-500 mt-0.5" />
@@ -423,7 +461,7 @@ function DashboardContent() {
                     </div>
                   )}
                 </div>
-              </div>
+              )}
             </motion.div>
           ) : (
             /* PATIENT DASHBOARD */

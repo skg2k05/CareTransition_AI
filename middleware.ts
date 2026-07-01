@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Public routes that don't need auth
-  const publicRoutes = ['/login', '/verify', '/api/auth/send-otp', '/api/auth/verify-otp'];
+  const publicRoutes = ['/auth/login', '/auth/verify', '/api/auth/send-otp', '/api/auth/verify-otp'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   
   // API routes (handled separately)
@@ -15,12 +15,12 @@ export function middleware(request: NextRequest) {
   const authToken = request.cookies.get('caretransition_auth')?.value;
   
   // If no auth and trying to access protected route, redirect to login
-  if (!isPublicRoute && !isApiRoute && !authToken && pathname !== '/') {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (!isPublicRoute && !isApiRoute && !authToken) {
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
   
   // If authenticated and trying to access login, redirect to dashboard
-  if (authToken && (pathname === '/login' || pathname === '/verify')) {
+  if (authToken && (pathname === '/auth/login' || pathname === '/auth/verify' || pathname === '/')) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

@@ -20,7 +20,7 @@ export default function LoginPage() {
 
     try {
       await login(role, identifier);
-      router.push('/verify');
+      router.push('/auth/verify');
     } catch (err) {
       setError('Failed to send OTP. Please try again.');
     } finally {

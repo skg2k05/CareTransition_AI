@@ -77,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRole(pendingRole);
       localStorage.setItem('caretransition_auth', JSON.stringify(newUser));
       localStorage.removeItem('caretransition_pending');
+      document.cookie = `caretransition_auth=${newUser.id}; path=/; max-age=604800; samesite=lax`;
       return true;
     }
     return false;
@@ -87,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRole(null);
     localStorage.removeItem('caretransition_auth');
     localStorage.removeItem('caretransition_pending');
+    document.cookie = 'caretransition_auth=; path=/; max-age=0; samesite=lax';
   };
 
   return (

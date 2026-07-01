@@ -127,7 +127,7 @@ export default function VerifyPage() {
 
         <div className="mt-6 flex items-center justify-between text-xs">
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/auth/login')}
             className="text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
           >
             <RotateCcw className="w-3 h-3" />

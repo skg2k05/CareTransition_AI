@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Stethoscope, 
   Pill, 
@@ -88,6 +88,9 @@ export default function ReportView({ report }: ReportViewProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  
+  const audioQueue = useRef<HTMLAudioElement[]>([]);
+  const currentAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     return () => {
@@ -130,90 +133,113 @@ export default function ReportView({ report }: ReportViewProps) {
       };
       triggerFetch();
     } else {
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      const resetStates = async () => {
-        await Promise.resolve();
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-      resetStates();
+      stopNarration();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPatientMode, selectedLanguage]);
 
-  // ─── INDIAN LANGUAGE VOICE MAPPING ─────────────────────────────────────
-  const startNarration = (text: string) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    const synth = window.speechSynthesis;
-    synth.cancel();
+  // ─── CUSTOM GOOGLE TRANSLATE TTS API WORKAROUND ──────────────────────
+  const startNarration = async (text: string) => {
+    stopNarration();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Indian language voice mapping
+    // Map to Google Translate language codes
     const langMap: Record<string, string> = {
-      'English': 'en-IN',
-      'Hindi': 'hi-IN',
-      'Kannada': 'kn-IN',
-      'Tamil': 'ta-IN',
-      'Telugu': 'te-IN',
-      'Bengali': 'bn-IN',
-      'Marathi': 'mr-IN',
-      'Gujarati': 'gu-IN',
-      'Malayalam': 'ml-IN',
-      'Punjabi': 'pa-IN',
-      'Urdu': 'ur-IN',
-      'Odia': 'or-IN'
+      'English': 'en',
+      'Hindi': 'hi',
+      'Kannada': 'kn',
+      'Tamil': 'ta',
+      'Telugu': 'te',
+      'Bengali': 'bn',
+      'Marathi': 'mr',
+      'Gujarati': 'gu',
+      'Malayalam': 'ml',
+      'Punjabi': 'pa',
+      'Urdu': 'ur',
+      'Odia': 'or'
     };
 
-    const langCode = langMap[selectedLanguage] || 'en-IN';
-    utterance.lang = langCode;
-    utterance.rate = 0.9;   // Slightly slower for clarity
-    utterance.pitch = 1.0;
+    const tl = langMap[selectedLanguage] || 'en';
 
-    // Try to find best matching voice
-    const voices = synth.getVoices();
-    const voice = voices.find(v => v.lang === langCode) || 
-                 voices.find(v => v.lang.startsWith(langCode.split('-')[0])) ||
-                 voices.find(v => v.lang === 'en-IN') ||
-                 voices[0];
-    
-    if (voice) {
-      utterance.voice = voice;
-    }
+    // The API has a strict 200-character limit.
+    // Split by punctuation first to make pauses natural.
+    const chunks = text.match(/[^.!?\n]+[.!?\n]*/g) || [text];
+    let safeChunks: string[] = [];
 
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
+    chunks.forEach(chunk => {
+      if (chunk.length < 200) {
+        safeChunks.push(chunk);
+      } else {
+        // Fallback: Split by space if a sentence is insanely long
+        const words = chunk.split(' ');
+        let currentChunk = '';
+        words.forEach(word => {
+          if ((currentChunk + ' ' + word).length < 200) {
+            currentChunk += (currentChunk ? ' ' : '') + word;
+          } else {
+            safeChunks.push(currentChunk);
+            currentChunk = word;
+          }
+        });
+        if (currentChunk) safeChunks.push(currentChunk);
+      }
+    });
 
-    utterance.onerror = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
+    safeChunks = safeChunks.map(c => c.trim()).filter(c => c.length > 0);
 
-    setCurrentUtterance(utterance);
+    // Pre-create Audio objects
+    audioQueue.current = safeChunks.map(chunk => {
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(chunk)}`;
+      return new Audio(url);
+    });
+
+    if (audioQueue.current.length === 0) return;
+
     setIsPlaying(true);
     setIsPaused(false);
-    synth.speak(utterance);
+    playNextChunk();
+  };
+
+  const playNextChunk = () => {
+    if (audioQueue.current.length === 0) {
+      setIsPlaying(false);
+      currentAudio.current = null;
+      return;
+    }
+    
+    currentAudio.current = audioQueue.current.shift() || null;
+    if (currentAudio.current) {
+      currentAudio.current.onended = () => playNextChunk();
+      currentAudio.current.onerror = () => {
+        console.warn("Audio chunk failed to load. Skipping...");
+        playNextChunk();
+      };
+      
+      currentAudio.current.play().catch(e => {
+        console.error("Audio playback blocked by browser:", e);
+        setIsPlaying(false);
+      });
+    }
   };
 
   const pauseNarration = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    const synth = window.speechSynthesis;
-    if (isPlaying && !isPaused) {
-      synth.pause();
-      setIsPaused(true);
-    } else if (isPaused) {
-      synth.resume();
-      setIsPaused(false);
+    if (currentAudio.current) {
+      if (isPlaying && !isPaused) {
+        currentAudio.current.pause();
+        setIsPaused(true);
+      } else if (isPaused) {
+        currentAudio.current.play();
+        setIsPaused(false);
+      }
     }
   };
 
   const stopNarration = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
+    if (currentAudio.current) {
+      currentAudio.current.pause();
+      currentAudio.current.currentTime = 0;
+    }
+    audioQueue.current = [];
+    currentAudio.current = null;
     setIsPlaying(false);
     setIsPaused(false);
   };
@@ -338,7 +364,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
   const riskStyles = getRiskColor(report.risk.readmissionRisk);
 
   return (
-    <div id="report-view-container" className="space-y-6">
+    <div id="report-view-container" className="space-y-4">
       
       {/* View Switcher Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md transition-colors duration-200">
@@ -634,7 +660,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
             transition={{ duration: 0.25 }}
-            className="space-y-6"
+            className="space-y-4"
           >
             {/* Report Header Card */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden transition-colors duration-200">
@@ -688,7 +714,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
 
               {/* Clinical Summary & Risk */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 space-y-4">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Clinical Overview Summary</span>
@@ -715,12 +741,9 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
             </div>
 
-            {/* Critical Warnings & Action Plan */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Critical Warnings */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col transition-colors duration-200">
-                <div className="absolute top-0 left-0 w-4 h-full bg-rose-500/40" />
+            {/* Critical Warnings (Full Width) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/20 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden flex flex-col transition-colors duration-200">
+              <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-rose-500 to-rose-600" />
                 <div className="flex items-center gap-2.5 mb-5 pl-2">
                   <div className="p-1.5 bg-rose-500/10 rounded-lg text-rose-500 dark:text-rose-400">
                     <AlertTriangle className="w-4 h-4 animate-pulse" />
@@ -742,11 +765,13 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </div>
                   )}
                 </div>
-              </div>
+            </div>
 
-              {/* Transition Action Plan */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col transition-colors duration-200">
-                <div className="absolute top-0 left-0 w-4 h-full bg-emerald-500/40" />
+            {/* Overrides Validation (Pharmacist & Scheduling) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+              
+              {/* Medication Agent Panel */}
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl relative transition-colors duration-200">
                 <div className="flex items-center justify-between mb-3 pl-2">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
@@ -786,13 +811,57 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
               </div>
 
+              {/* SDoH Panel */}
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl relative transition-colors duration-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
+                      <HeartHandshake className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Social Determinants</h4>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20 animate-pulse">
+                    SDoH ACTIVE
+                  </span>
+                </div>
+
+                <div className="space-y-3.5 mt-3.5">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Risk Factors & Barriers:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[...(report.sdoh?.socialRiskFactors || []), ...(report.sdoh?.barriersToCare || [])].map((factor, idx) => (
+                        <div key={idx} className="text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors">
+                          {factor}
+                        </div>
+                      ))}
+                      {(!report.sdoh?.socialRiskFactors?.length && !report.sdoh?.barriersToCare?.length) && (
+                        <span className="text-xs text-slate-500 italic">No social barriers or risks identified.</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-850">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Work Interventions:</span>
+                    <ul className="space-y-1.5">
+                      {(report.sdoh?.recommendations || []).map((rec, idx) => (
+                        <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/40 flex items-start gap-2 transition-colors">
+                          <ChevronRight className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                      {!report.sdoh?.recommendations?.length && (
+                        <li className="text-xs text-slate-500 italic">No custom social support recommendations.</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Overrides Validation Audit Blocks */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
+            {/* Pharmacist & Scheduling Grids */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
               {/* Medication Agent Panel */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-sky-500/10 rounded-lg text-sky-500 dark:text-sky-400">
@@ -831,8 +900,8 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
               </div>
 
-              {/* Scheduling & Navigator Panel */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
+              {/* Scheduling Panel */}
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-violet-500/10 rounded-lg text-violet-500 dark:text-violet-400">

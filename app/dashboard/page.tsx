@@ -328,7 +328,7 @@ function DashboardContent() {
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <AnimatePresence mode="wait">

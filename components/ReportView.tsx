@@ -87,10 +87,6 @@ export default function ReportView({ report }: ReportViewProps) {
   // Audio / Speech state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
-  
-  const audioQueue = useRef<HTMLAudioElement[]>([]);
-  const currentAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     return () => {
@@ -144,102 +140,63 @@ export default function ReportView({ report }: ReportViewProps) {
 
     // Map to Google Translate language codes
     const langMap: Record<string, string> = {
-      'English': 'en',
-      'Hindi': 'hi',
-      'Kannada': 'kn',
-      'Tamil': 'ta',
-      'Telugu': 'te',
-      'Bengali': 'bn',
-      'Marathi': 'mr',
-      'Gujarati': 'gu',
-      'Malayalam': 'ml',
-      'Punjabi': 'pa',
-      'Urdu': 'ur',
-      'Odia': 'or'
+      'English': 'en-US',
+      'Hindi': 'hi-IN',
+      'Kannada': 'kn-IN',
+      'Tamil': 'ta-IN',
+      'Telugu': 'te-IN',
+      'Bengali': 'bn-IN',
+      'Marathi': 'mr-IN',
+      'Gujarati': 'gu-IN',
+      'Malayalam': 'ml-IN',
+      'Punjabi': 'pa-IN',
+      'Urdu': 'ur-IN',
+      'Odia': 'or-IN'
     };
 
-    const tl = langMap[selectedLanguage] || 'en';
+    const tl = langMap[selectedLanguage] || 'en-US';
 
-    // The API has a strict 200-character limit.
-    // Split by punctuation first to make pauses natural.
-    const chunks = text.match(/[^.!?\n]+[.!?\n]*/g) || [text];
-    let safeChunks: string[] = [];
-
-    chunks.forEach(chunk => {
-      if (chunk.length < 200) {
-        safeChunks.push(chunk);
-      } else {
-        // Fallback: Split by space if a sentence is insanely long
-        const words = chunk.split(' ');
-        let currentChunk = '';
-        words.forEach(word => {
-          if ((currentChunk + ' ' + word).length < 200) {
-            currentChunk += (currentChunk ? ' ' : '') + word;
-          } else {
-            safeChunks.push(currentChunk);
-            currentChunk = word;
-          }
-        });
-        if (currentChunk) safeChunks.push(currentChunk);
-      }
-    });
-
-    safeChunks = safeChunks.map(c => c.trim()).filter(c => c.length > 0);
-
-    // Pre-create Audio objects
-    audioQueue.current = safeChunks.map(chunk => {
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=${tl}&q=${encodeURIComponent(chunk)}`;
-      return new Audio(url);
-    });
-
-    if (audioQueue.current.length === 0) return;
-
-    setIsPlaying(true);
-    setIsPaused(false);
-    playNextChunk();
-  };
-
-  const playNextChunk = () => {
-    if (audioQueue.current.length === 0) {
-      setIsPlaying(false);
-      currentAudio.current = null;
-      return;
-    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = tl;
     
-    currentAudio.current = audioQueue.current.shift() || null;
-    if (currentAudio.current) {
-      currentAudio.current.onended = () => playNextChunk();
-      currentAudio.current.onerror = () => {
-        console.warn("Audio chunk failed to load. Skipping...");
-        playNextChunk();
-      };
-      
-      currentAudio.current.play().catch(e => {
-        console.error("Audio playback blocked by browser:", e);
-        setIsPlaying(false);
-      });
+    // Attempt to find a suitable voice
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(v => v.lang.startsWith(tl.split('-')[0]));
+    if (voice) {
+      utterance.voice = voice;
     }
+
+    utterance.onstart = () => {
+      setIsPlaying(true);
+      setIsPaused(false);
+    };
+
+    utterance.onend = () => {
+      setIsPlaying(false);
+      setIsPaused(false);
+    };
+
+    utterance.onerror = (e) => {
+      console.error("Speech synthesis error", e);
+      setIsPlaying(false);
+      setIsPaused(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const pauseNarration = () => {
-    if (currentAudio.current) {
-      if (isPlaying && !isPaused) {
-        currentAudio.current.pause();
-        setIsPaused(true);
-      } else if (isPaused) {
-        currentAudio.current.play();
-        setIsPaused(false);
-      }
+    if (isPlaying && !isPaused) {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    } else if (isPaused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
     }
   };
 
   const stopNarration = () => {
-    if (currentAudio.current) {
-      currentAudio.current.pause();
-      currentAudio.current.currentTime = 0;
-    }
-    audioQueue.current = [];
-    currentAudio.current = null;
+    window.speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
   };
@@ -859,9 +816,9 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
             </div>
 
             {/* Pharmacist & Scheduling Grids */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            <div className="columns-1 lg:columns-2 gap-4 space-y-4">
               {/* Medication Agent Panel */}
-              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
+              <div className="break-inside-avoid bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-sky-500/10 rounded-lg text-sky-500 dark:text-sky-400">
@@ -901,7 +858,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
 
               {/* Scheduling Panel */}
-              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
+              <div className="break-inside-avoid bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-violet-500/10 rounded-lg text-violet-500 dark:text-violet-400">
@@ -928,7 +885,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
 
               {/* SDoH Social Determinants Panel */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
+              <div className="break-inside-avoid bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">

@@ -300,11 +300,11 @@ export default function ClinicianReview({
         </button>
       </div>
 
-      {/* Grid of 4 Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Masonry Layout of 4 Cards */}
+      <div className="columns-1 md:columns-2 lg:columns-4 gap-5 space-y-5">
         
         {/* CARD 1: MEDICATION AGENT */}
-        <div id="medication-review-card" className={`bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
+        <div id="medication-review-card" className={`break-inside-avoid bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
           medApproved === true ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/5' :
           medApproved === false ? 'border-rose-500/30 bg-rose-500/5 dark:bg-rose-950/5' :
           'border-slate-200 dark:border-slate-800'
@@ -418,7 +418,7 @@ export default function ClinicianReview({
         </div>
 
         {/* CARD 2: SCHEDULING AGENT */}
-        <div id="scheduling-review-card" className={`bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
+        <div id="scheduling-review-card" className={`break-inside-avoid bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
           schedApproved === true ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/5' :
           schedApproved === false ? 'border-rose-500/30 bg-rose-500/5 dark:bg-rose-950/5' :
           'border-slate-200 dark:border-slate-800'
@@ -520,7 +520,7 @@ export default function ClinicianReview({
         </div>
 
         {/* CARD 3: RISK ASSESSOR AGENT */}
-        <div id="risk-review-card" className={`bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
+        <div id="risk-review-card" className={`break-inside-avoid bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
           riskApproved === true ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/5' :
           riskApproved === false ? 'border-rose-500/30 bg-rose-500/5 dark:bg-rose-950/5' :
           'border-slate-200 dark:border-slate-800'
@@ -592,7 +592,7 @@ export default function ClinicianReview({
         </div>
 
         {/* CARD 4: SDoH SOCIAL AGENT */}
-        <div id="sdoh-review-card" className={`bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
+        <div id="sdoh-review-card" className={`break-inside-avoid bg-slate-50 dark:bg-slate-950/80 p-5 rounded-xl border transition-all ${
           sdohApproved === true ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/5' :
           sdohApproved === false ? 'border-rose-500/30 bg-rose-500/5 dark:bg-rose-950/5' :
           'border-slate-200 dark:border-slate-800'

@@ -424,7 +424,7 @@ export default function App() {
       </header>
 
       {/* Main Container — TIGHTER */}
-      <main className="max-w-6xl mx-auto px-4 py-4">
+      <main className="max-w-5xl mx-auto px-4 py-4">
         <AnimatePresence mode="wait">
           
           {/* ORCHESTRATOR VIEW */}

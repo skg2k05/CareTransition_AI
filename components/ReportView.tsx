@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Stethoscope, 
   Pill, 
@@ -60,6 +60,18 @@ interface ReportViewProps {
   };
 }
 
+// Safe rendering helpers
+const renderString = (value: any): string => {
+  if (typeof value === 'string') return value;
+  if (value === null || value === undefined) return '';
+  return JSON.stringify(value);
+};
+
+const renderArray = (arr: any[] | undefined): string[] => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(item => typeof item === 'string' ? item : JSON.stringify(item));
+};
+
 export default function ReportView({ report }: ReportViewProps) {
   const [copied, setCopied] = useState(false);
   const [checkedTasks, setCheckedTasks] = useState<Record<number, boolean>>({});
@@ -75,7 +87,6 @@ export default function ReportView({ report }: ReportViewProps) {
   // Audio / Speech state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     return () => {
@@ -86,7 +97,6 @@ export default function ReportView({ report }: ReportViewProps) {
   }, []);
 
   const fetchPatientModeData = async (lang: string) => {
-    // Await a microtask to ensure state updates happen asynchronously relative to the useEffect trigger
     await Promise.resolve();
     setIsLoadingPatient(true);
     setPatientError(null);
@@ -114,81 +124,78 @@ export default function ReportView({ report }: ReportViewProps) {
 
   useEffect(() => {
     if (isPatientMode) {
-      // Trigger fetch inside microtask asynchronous frame
       const triggerFetch = async () => {
         await fetchPatientModeData(selectedLanguage);
       };
       triggerFetch();
     } else {
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      const resetStates = async () => {
-        await Promise.resolve();
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-      resetStates();
+      stopNarration();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPatientMode, selectedLanguage]);
 
-  const startNarration = (text: string) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    const synth = window.speechSynthesis;
-    synth.cancel();
+  // ─── CUSTOM GOOGLE TRANSLATE TTS API WORKAROUND ──────────────────────
+  const startNarration = async (text: string) => {
+    stopNarration();
+
+    // Map to Google Translate language codes
+    const langMap: Record<string, string> = {
+      'English': 'en-US',
+      'Hindi': 'hi-IN',
+      'Kannada': 'kn-IN',
+      'Tamil': 'ta-IN',
+      'Telugu': 'te-IN',
+      'Bengali': 'bn-IN',
+      'Marathi': 'mr-IN',
+      'Gujarati': 'gu-IN',
+      'Malayalam': 'ml-IN',
+      'Punjabi': 'pa-IN',
+      'Urdu': 'ur-IN',
+      'Odia': 'or-IN'
+    };
+
+    const tl = langMap[selectedLanguage] || 'en-US';
 
     const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = tl;
     
-    // Choose voice based on language
-    let langCode = 'en-US';
-    if (selectedLanguage === 'Spanish') langCode = 'es-ES';
-    else if (selectedLanguage === 'Mandarin') langCode = 'zh-CN';
-    else if (selectedLanguage === 'Cantonese') langCode = 'zh-HK';
-    else if (selectedLanguage === 'Tagalog') langCode = 'fil-PH';
-    else if (selectedLanguage === 'Vietnamese') langCode = 'vi-VN';
-    else if (selectedLanguage === 'Arabic') langCode = 'ar-SA';
-    else if (selectedLanguage === 'French') langCode = 'fr-FR';
-
-    utterance.lang = langCode;
-
-    // Load voices and try matching
-    const voices = synth.getVoices();
-    const voice = voices.find(v => v.lang.startsWith(langCode));
+    // Attempt to find a suitable voice
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(v => v.lang.startsWith(tl.split('-')[0]));
     if (voice) {
       utterance.voice = voice;
     }
+
+    utterance.onstart = () => {
+      setIsPlaying(true);
+      setIsPaused(false);
+    };
 
     utterance.onend = () => {
       setIsPlaying(false);
       setIsPaused(false);
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (e) => {
+      console.error("Speech synthesis error", e);
       setIsPlaying(false);
       setIsPaused(false);
     };
 
-    setCurrentUtterance(utterance);
-    setIsPlaying(true);
-    setIsPaused(false);
-    synth.speak(utterance);
+    window.speechSynthesis.speak(utterance);
   };
 
   const pauseNarration = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    const synth = window.speechSynthesis;
     if (isPlaying && !isPaused) {
-      synth.pause();
+      window.speechSynthesis.pause();
       setIsPaused(true);
     } else if (isPaused) {
-      synth.resume();
+      window.speechSynthesis.resume();
       setIsPaused(false);
     }
   };
 
   const stopNarration = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
@@ -314,9 +321,9 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
   const riskStyles = getRiskColor(report.risk.readmissionRisk);
 
   return (
-    <div id="report-view-container" className="space-y-6">
+    <div id="report-view-container" className="space-y-4">
       
-      {/* View Switcher Tabs: Clinical Overview vs Patient-Friendly Mode */}
+      {/* View Switcher Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md transition-colors duration-200">
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -356,7 +363,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
 
       <AnimatePresence mode="wait">
         {isPatientMode ? (
-          /* PATIENT-FRIENDLY INTERACTIVE REPORT (PATIENT MODE) */
+          /* PATIENT-FRIENDLY INTERACTIVE REPORT */
           <motion.div
             key="patient-view"
             initial={{ opacity: 0, y: 15 }}
@@ -387,29 +394,33 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                   </div>
                 </div>
 
-                {/* Patient Mode Controls: Language & TTS Narration */}
                 <div className="flex flex-wrap items-center gap-3">
-                  
-                  {/* Language Selector */}
+                  {/* ─── INDIAN LANGUAGE SELECTOR ───────────────────────── */}
                   <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-850 transition-colors">
                     <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <select
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none border-none cursor-pointer pr-1"
+                      className="bg-transparent dark:bg-slate-950 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none border-none cursor-pointer pr-1"
                     >
+                      {/* Top 3 Priority */}
                       <option value="English">English</option>
-                      <option value="Spanish">Español (Spanish)</option>
-                      <option value="Mandarin">中文 (Mandarin)</option>
-                      <option value="Cantonese">粵語 (Cantonese)</option>
-                      <option value="Tagalog">Tagalog (Filipino)</option>
-                      <option value="Vietnamese">Tiếng Việt (Vietnamese)</option>
-                      <option value="Arabic">العربية (Arabic)</option>
-                      <option value="French">Français (French)</option>
+                      <option value="Hindi">हिन्दी (Hindi)</option>
+                      <option value="Kannada">ಕನ್ನಡ (Kannada)</option>
+                      
+                      {/* Other Indian Languages */}
+                      <option value="Tamil">தமிழ் (Tamil)</option>
+                      <option value="Telugu">తెలుగు (Telugu)</option>
+                      <option value="Bengali">বাংলা (Bengali)</option>
+                      <option value="Marathi">मराठी (Marathi)</option>
+                      <option value="Gujarati">ગુજરાતી (Gujarati)</option>
+                      <option value="Malayalam">മലയാളം (Malayalam)</option>
+                      <option value="Punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
+                      <option value="Urdu">اردو (Urdu)</option>
+                      <option value="Odia">ଓଡ଼ିଆ (Odia)</option>
                     </select>
                   </div>
 
-                  {/* Audio Controls */}
                   <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-850 transition-colors">
                     <button
                       onClick={() => {
@@ -443,7 +454,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                       </button>
                     )}
                   </div>
-
                 </div>
               </div>
 
@@ -469,7 +479,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               ) : patientData ? (
                 <div className="mt-6 space-y-6">
                   
-                  {/* Active Audio Narration Feedback Banner */}
                   {isPlaying && (
                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400 animate-pulse transition-colors">
                       <span className="flex items-center gap-2 font-medium">
@@ -482,22 +491,21 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Welcome message & Checklist */}
-                    <div className="lg:col-span-2 space-y-6">
-                      <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2 font-mono">👋 Welcome Home Summary</span>
-                        <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-sans font-medium">
-                          {patientData.welcomeMessage}
-                        </p>
-                      </div>
+                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors mb-6">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2 font-mono">Welcome Home Summary</span>
+                    <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-sans font-medium">
+                      {renderString(patientData.welcomeMessage)}
+                    </p>
+                  </div>
 
-                      {/* Interactive daily checklist */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    {/* Left Column */}
+                    <div className="space-y-6">
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3 font-mono">📋 My Checklist (Check items as you do them!)</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-3 font-mono">My Checklist (Check items as you do them!)</span>
                         
                         <div className="space-y-2.5">
-                          {patientData.dailyChecklist?.map((task: string, i: number) => {
+                          {renderArray(patientData.dailyChecklist || patientData.checklist).map((task: string, i: number) => {
                             const isChecked = !!patientCheckedTasks[i];
                             return (
                               <div
@@ -524,66 +532,63 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                           })}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Medications & Schedule */}
-                    <div className="space-y-6">
-                      
-                      {/* Discharge Medications */}
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <div className="flex items-center gap-2 mb-3">
                           <Pill className="w-4 h-4 text-emerald-500" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">💊 My Discharge Medications</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">My Discharge Medications</span>
                         </div>
                         
                         <div className="space-y-3">
-                          {patientData.medications?.map((m: any, i: number) => (
+                          {(patientData.medications || []).map((m: any, i: number) => (
                             <div key={i} className="bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3 rounded-xl space-y-1 shadow-sm transition-colors">
-                              <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200">{m.name}</h4>
+                              <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
+                                {renderString(m.name)}
+                              </h4>
                               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                                <strong className="text-slate-800 dark:text-slate-300">Why I take it:</strong> {m.reason}
+                                <strong className="text-slate-800 dark:text-slate-300">Why I take it:</strong> {renderString(m.reason || m.purpose)}
                               </p>
                               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                                <strong className="text-slate-800 dark:text-slate-300">How I take it:</strong> {m.instructions}
+                                <strong className="text-slate-800 dark:text-slate-300">How I take it:</strong> {renderString(m.instructions)}
                               </p>
                             </div>
                           ))}
-                          {!patientData.medications?.length && (
+                          {!(patientData.medications || []).length && (
                             <p className="text-xs text-slate-450 italic">No medications listed for this discharge plan.</p>
                           )}
                         </div>
                       </div>
+                    </div>
 
-                      {/* Follow-up Doctor Appointments */}
+                    {/* Right Column */}
+                    <div className="space-y-6">
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <div className="flex items-center gap-2 mb-3">
                           <Calendar className="w-4 h-4 text-violet-500 animate-pulse" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">📅 My Appointments</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">My Appointments</span>
                         </div>
                         
                         <div className="space-y-2.5">
-                          {patientData.appointments?.map((appt: string, i: number) => (
+                          {renderArray(patientData.appointments).map((appt: string, i: number) => (
                             <div key={i} className="bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex gap-2.5 items-start shadow-sm transition-colors">
                               <span className="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400 mt-1.5 shrink-0" />
                               <p className="text-xs text-slate-700 dark:text-slate-300 font-bold leading-relaxed">{appt}</p>
                             </div>
                           ))}
-                          {!patientData.appointments?.length && (
+                          {!renderArray(patientData.appointments).length && (
                             <p className="text-xs text-slate-450 italic">No doctor appoinments scheduled.</p>
                           )}
                         </div>
                       </div>
 
-                      {/* Ride, Support & social assistance options */}
-                      {patientData.supportAndRides && (
+                      {renderArray(patientData.supportAndRides || patientData.support).length > 0 && (
                         <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                           <div className="flex items-center gap-2 mb-3">
                             <HeartHandshake className="w-4 h-4 text-sky-500" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">🤝 Support & Transport Services</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">Support & Transport Services</span>
                           </div>
                           
                           <ul className="space-y-2.5">
-                            {patientData.supportAndRides.map((help: string, i: number) => (
+                            {renderArray(patientData.supportAndRides || patientData.support).map((help: string, i: number) => (
                               <li key={i} className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/40 p-2.5 rounded-lg flex items-start gap-2 leading-relaxed transition-colors">
                                 <ChevronRight className="w-3.5 h-3.5 text-sky-500 shrink-0 mt-0.5" />
                                 <span>{help}</span>
@@ -612,7 +617,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
             transition={{ duration: 0.25 }}
-            className="space-y-6"
+            className="space-y-4"
           >
             {/* Report Header Card */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden transition-colors duration-200">
@@ -666,8 +671,8 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
 
               {/* Clinical Summary & Risk */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-4">
+              <div className="flex flex-col gap-4">
+                <div className="space-y-4">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Clinical Overview Summary</span>
                     <p className="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-sans font-medium">
@@ -689,16 +694,13 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                       {report.risk.analysis}
                     </p>
                   </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Critical Warnings & Action Plan */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Critical Warnings */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col transition-colors duration-200">
-                <div className="absolute top-0 left-0 w-4 h-full bg-rose-500/40" />
+            {/* Critical Warnings (Full Width) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/20 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden flex flex-col transition-colors duration-200">
+              <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-rose-500 to-rose-600" />
                 <div className="flex items-center gap-2.5 mb-5 pl-2">
                   <div className="p-1.5 bg-rose-500/10 rounded-lg text-rose-500 dark:text-rose-400">
                     <AlertTriangle className="w-4 h-4 animate-pulse" />
@@ -720,11 +722,13 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </div>
                   )}
                 </div>
-              </div>
+            </div>
 
-              {/* Transition Action Plan */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col transition-colors duration-200">
-                <div className="absolute top-0 left-0 w-4 h-full bg-emerald-500/40" />
+            {/* Overrides Validation (Pharmacist & Scheduling) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+              
+              {/* Medication Agent Panel */}
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl relative transition-colors duration-200">
                 <div className="flex items-center justify-between mb-3 pl-2">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
@@ -764,13 +768,11 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
               </div>
 
-            </div>
-
-            {/* Overrides Validation Audit Blocks */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* Medication Agent Panel */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
+              {/* Right Column: Stacked Pharmacist and Scheduling */}
+              <div className="flex flex-col gap-4">
+                
+                {/* Pharmacist Agent Panel */}
+                <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-sky-500/10 rounded-lg text-sky-500 dark:text-sky-400">
@@ -798,10 +800,10 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 
                 <div className="space-y-2 mt-3.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Pharmacology Recommendations:</span>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2.5">
                     {report.medication.recommendations.map((rec, idx) => (
-                      <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/40 flex items-start gap-2">
-                        <ChevronRight className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0 mt-0.5" />
+                      <li key={idx} className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800/40 flex items-start gap-3.5 transition-colors">
+                        <ChevronRight className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0 mt-0.5" />
                         <span>{rec}</span>
                       </li>
                     ))}
@@ -809,8 +811,8 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
               </div>
 
-              {/* Scheduling & Navigator Panel */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
+              {/* Scheduling Panel */}
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-violet-500/10 rounded-lg text-violet-500 dark:text-violet-400">
@@ -836,8 +838,13 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
               </div>
 
+              </div>
+            </div>
+
+            {/* Row 2: SDoH Full Width */}
+            <div>
               {/* SDoH Social Determinants Panel */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
@@ -850,9 +857,9 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                   </span>
                 </div>
 
-                <div className="space-y-3.5 mt-3.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-slate-200 dark:border-slate-850">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Risk Factors & Barriers:</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2">Social Risk Factors & Barriers:</span>
                     <div className="flex flex-wrap gap-1.5">
                       {[...(report.sdoh?.socialRiskFactors || []), ...(report.sdoh?.barriersToCare || [])].map((factor, idx) => (
                         <div key={idx} className="text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors">
@@ -865,26 +872,25 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-200 dark:border-slate-850">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Work Interventions:</span>
-                    <ul className="space-y-1.5">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2">Social Work Interventions:</span>
+                    <ul className="space-y-2.5">
                       {(report.sdoh?.recommendations || []).map((rec, idx) => (
-                        <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/40 flex items-start gap-2 transition-colors">
-                          <ChevronRight className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <li key={idx} className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800/40 flex items-start gap-3.5 transition-colors">
+                          <ChevronRight className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                           <span>{rec}</span>
                         </li>
                       ))}
                       {!report.sdoh?.recommendations?.length && (
-                        <li className="text-xs text-slate-500 italic">No custom social support recommendations.</li>
+                        <li className="text-xs font-bold text-slate-500 italic p-3.5">No custom social support recommendations.</li>
                       )}
                     </ul>
                   </div>
                 </div>
               </div>
-
             </div>
 
-            {/* Footer Diagnostic Metadata */}
+          {/* Footer Diagnostic Metadata */}
             <div className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-850/50 rounded-xl px-4 py-3.5 flex items-center justify-between text-xs text-slate-500 transition-colors duration-200">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />

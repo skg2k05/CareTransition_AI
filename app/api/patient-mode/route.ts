@@ -30,7 +30,8 @@ Rules:
 2. Target a 5th-grade reading level. Use extremely simple, clear words. Avoid medical jargon. If you must use a medical term, define it simply in parentheses.
 3. Make the tone warm, comforting, encouraging, and clear.
 4. Fill in the requested JSON structure. Keep instructions highly actionable and clear.
-5. Create a seamless spoken narration script (narrationScript) in "${selectedLanguage}" that will be read aloud to the patient using text-to-speech. Make it sound extremely natural, friendly, slow, and easy to follow.`;
+5. Create a seamless spoken narration script (narrationScript) in "${selectedLanguage}" that will be read aloud to the patient using text-to-speech. Make it sound extremely natural, friendly, slow, and easy to follow.
+6. For Indian languages (Hindi, Kannada, Tamil, Telugu, etc.), use natural conversational style that a rural patient would understand. Avoid overly formal or bookish language. Use common everyday terms instead of complex medical vocabulary.`;
 
     const prompt = `Here is the complex medical transition report:
 ${JSON.stringify(report, null, 2)}
@@ -38,7 +39,7 @@ ${JSON.stringify(report, null, 2)}
 Please simplify and translate this report to "${selectedLanguage}" at a 5th-grade reading level. Follow the schema strictly.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -54,7 +55,7 @@ Please simplify and translate this report to "${selectedLanguage}" at a 5th-grad
               type: Type.STRING,
               description: "A very clear, simple explanation of the patient's condition, why they were in the hospital, and what the main goals are now. Written at a 5th-grade level."
             },
-            checklist: {
+            dailyChecklist: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
               description: "A checklist of 3-5 critical, simple daily tasks for the patient (e.g., 'Check your weight first thing in the morning', 'Avoid eating salty foods')."
@@ -65,27 +66,19 @@ Please simplify and translate this report to "${selectedLanguage}" at a 5th-grad
                 type: Type.OBJECT,
                 properties: {
                   name: { type: Type.STRING, description: "Simple/brand name of the medicine." },
-                  purpose: { type: Type.STRING, description: "What this medicine does in simple terms (e.g., 'Helps lower your blood pressure')." },
+                  reason: { type: Type.STRING, description: "What this medicine does in simple terms (e.g., 'Helps lower your blood pressure')." },
                   instructions: { type: Type.STRING, description: "When and how to take it (e.g., 'Take one tablet by mouth every morning with a full glass of water')." }
                 },
-                required: ["name", "purpose", "instructions"]
+                required: ["name", "reason", "instructions"]
               },
               description: "The list of medications simplified for a patient."
             },
             appointments: {
               type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  who: { type: Type.STRING, description: "The doctor or clinic name (e.g., 'Dr. Green (Heart Doctor)')." },
-                  when: { type: Type.STRING, description: "The time or timeframe of the visit (e.g., 'Within 5 days')." },
-                  why: { type: Type.STRING, description: "The simple reason for the visit (e.g., 'To check how your heart is pumping')." }
-                },
-                required: ["who", "when", "why"]
-              },
-              description: "Simplified upcoming clinic follow-ups."
+              items: { type: Type.STRING },
+              description: "Simplified upcoming clinic follow-ups as readable strings (e.g., 'Dr. Green (Heart Doctor) - Within 5 days - To check how your heart is pumping')."
             },
-            support: {
+            supportAndRides: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
               description: "Simple support resources and tips, including SDoH-related help (e.g., 'If you need a free ride, call Social Work at 555-0199', 'Ask your daughter to help fill your pill box')."
@@ -95,7 +88,7 @@ Please simplify and translate this report to "${selectedLanguage}" at a 5th-grad
               description: "A fully continuous, cohesive, spoken-script version of this entire guide. It will be read aloud to the patient, so make it sound very natural, slow-paced, clear, comforting, and direct."
             }
           },
-          required: ["welcomeMessage", "patientSummary5thGrade", "checklist", "medications", "appointments", "support", "narrationScript"]
+          required: ["welcomeMessage", "patientSummary5thGrade", "dailyChecklist", "medications", "appointments", "supportAndRides", "narrationScript"]
         }
       }
     });

@@ -370,7 +370,7 @@ export default function ClinicianReview({
             <div className="space-y-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Pharmacology Recommendations</span>
               
-              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+              <div className="space-y-1.5 pr-1">
                 {med.recommendations.map((rec, idx) => (
                   <div key={idx} className="flex gap-1.5 items-center bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800/60 p-1.5 rounded-lg">
                     <Edit3 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
@@ -472,7 +472,7 @@ export default function ClinicianReview({
             <div className="space-y-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Required Appointments</span>
               
-              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+              <div className="space-y-1.5 pr-1">
                 {sched.appointmentsNeeded.map((appt, idx) => (
                   <div key={idx} className="flex gap-1.5 items-center bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800/60 p-1.5 rounded-lg">
                     <Edit3 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
@@ -579,8 +579,12 @@ export default function ClinicianReview({
               <textarea
                 value={risk.analysis}
                 onChange={(e) => setRisk(prev => ({ ...prev, analysis: e.target.value }))}
-                rows={5}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-slate-700 dark:text-slate-300 leading-relaxed focus:outline-none focus:border-slate-400 dark:focus:border-slate-700 font-sans text-xs"
+                style={{ height: 'auto', minHeight: '120px' }}
+                onInput={(e) => {
+                  e.currentTarget.style.height = 'auto';
+                  e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                }}
+                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-slate-700 dark:text-slate-300 leading-relaxed focus:outline-none focus:border-slate-400 dark:focus:border-slate-700 font-sans text-xs resize-none overflow-hidden"
                 placeholder="Reasoning justification..."
               />
             </div>
@@ -630,7 +634,7 @@ export default function ClinicianReview({
             {/* Social Risk Factors */}
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Social Risk Factors</span>
-              <div className="space-y-1.5 max-h-[100px] overflow-y-auto pr-1">
+              <div className="space-y-1.5 pr-1">
                 {sdoh.socialRiskFactors.map((factor, idx) => (
                   <div key={idx} className="flex gap-1.5 items-center bg-slate-900/30 border border-slate-800/60 p-1.5 rounded-lg">
                     <Edit3 className="w-3.5 h-3.5 text-slate-600 shrink-0" />
@@ -673,7 +677,7 @@ export default function ClinicianReview({
             {/* Barriers to Care */}
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Barriers to Care</span>
-              <div className="space-y-1.5 max-h-[100px] overflow-y-auto pr-1">
+              <div className="space-y-1.5 pr-1">
                 {sdoh.barriersToCare.map((barrier, idx) => (
                   <div key={idx} className="flex gap-1.5 items-center bg-slate-900/30 border border-slate-800/60 p-1.5 rounded-lg">
                     <Edit3 className="w-3.5 h-3.5 text-slate-600 shrink-0" />
@@ -716,7 +720,7 @@ export default function ClinicianReview({
             {/* Recommendations */}
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Social Work Recommendations</span>
-              <div className="space-y-1.5 max-h-[100px] overflow-y-auto pr-1">
+              <div className="space-y-1.5 pr-1">
                 {sdoh.recommendations.map((rec, idx) => (
                   <div key={idx} className="flex gap-1.5 items-center bg-slate-900/30 border border-slate-800/60 p-1.5 rounded-lg">
                     <Edit3 className="w-3.5 h-3.5 text-slate-600 shrink-0" />

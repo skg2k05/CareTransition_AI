@@ -188,7 +188,7 @@ export default function ReportView({ report }: ReportViewProps) {
 
     // Pre-create Audio objects
     audioQueue.current = safeChunks.map(chunk => {
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&q=${encodeURIComponent(chunk)}`;
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=${tl}&q=${encodeURIComponent(chunk)}`;
       return new Audio(url);
     });
 
@@ -444,7 +444,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     <select
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none border-none cursor-pointer pr-1"
+                      className="bg-transparent dark:bg-slate-950 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none border-none cursor-pointer pr-1"
                     >
                       {/* Top 3 Priority */}
                       <option value="English">English</option>
@@ -534,7 +534,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div className="lg:col-span-2 space-y-6">
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2 font-mono">👋 Welcome Home Summary</span>
@@ -714,8 +714,8 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
 
               {/* Clinical Summary & Risk */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2 space-y-4">
+              <div className="flex flex-col gap-4">
+                <div className="space-y-4">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Clinical Overview Summary</span>
                     <p className="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-sans font-medium">
@@ -737,9 +737,9 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                       {report.risk.analysis}
                     </p>
                   </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
             {/* Critical Warnings (Full Width) */}
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/20 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden flex flex-col transition-colors duration-200">

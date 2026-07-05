@@ -816,9 +816,12 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
             </div>
 
             {/* Pharmacist & Scheduling Grids */}
-            <div className="columns-1 lg:columns-2 gap-4 space-y-4">
-              {/* Medication Agent Panel */}
-              <div className="break-inside-avoid bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+              
+              {/* Column 1: Pharmacist & Scheduling */}
+              <div className="flex flex-col gap-4">
+                {/* Medication Agent Panel */}
+                <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-sky-500/10 rounded-lg text-sky-500 dark:text-sky-400">
@@ -858,7 +861,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
 
               {/* Scheduling Panel */}
-              <div className="break-inside-avoid bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-violet-500/10 rounded-lg text-violet-500 dark:text-violet-400">
@@ -884,8 +887,12 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
               </div>
 
-              {/* SDoH Social Determinants Panel */}
-              <div className="break-inside-avoid bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
+              </div>
+
+              {/* Column 2: SDoH */}
+              <div className="flex flex-col gap-4">
+                {/* SDoH Social Determinants Panel */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
@@ -929,7 +936,6 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                   </div>
                 </div>
               </div>
-
             </div>
 
             {/* Footer Diagnostic Metadata */}

@@ -104,7 +104,7 @@ export default function ExecutionTrajectory({ status, durations }: ExecutionTraj
             <div className="mx-auto w-10 h-10 bg-slate-900 border border-slate-700 rounded-xl flex items-center justify-center text-slate-300 mb-3 shadow-inner">
               <BrainCircuit className="w-5 h-5 text-slate-400" />
             </div>
-            <div className="text-xs font-bold uppercase tracking-widest text-slate-200">Orchestrator</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-200 break-words px-1">CORE</div>
             <div className="text-[10px] text-slate-500 mt-1.5 font-mono bg-slate-900/50 py-1 px-2 rounded-md">Dispatches tasks</div>
             
             {/* Arrow (Right) */}
@@ -222,7 +222,7 @@ export default function ExecutionTrajectory({ status, durations }: ExecutionTraj
             <div className="mx-auto w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-slate-950 border border-slate-800 text-slate-300 shadow-inner">
               {synthConfig.icon}
             </div>
-            <div className={`text-xs font-bold uppercase tracking-widest ${synthConfig.textColor}`}>Synthesis</div>
+            <div className={`text-xs font-bold uppercase tracking-widest`}>Synthesis</div>
             <div className="text-[10px] opacity-70 mt-1.5 font-mono py-1 px-2 rounded-md bg-black/20">Compiles consensus</div>
             
             <div className="flex flex-wrap items-center justify-between pt-3 border-t border-slate-800/60 mt-4">

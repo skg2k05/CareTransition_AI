@@ -1,71 +1,84 @@
-# CareTransition AI 🏥🤖
+# Care Transition AI
 
-CareTransition AI is a multi-agent clinical discharge coordinator built with Next.js and the Gemini API. It leverages advanced Large Language Models to read complex clinical discharge summaries and automatically perform multi-dimensional cross-referencing—assessing readmission risk, catching medication conflicts, structuring follow-up schedules, and identifying social determinants of health (SDoH).
+Care Transition AI is an advanced, multi-agent AI system designed to streamline the hospital discharge and patient transition process. It provides personalized, plain-language patient recovery guides (translated into multiple languages with voice support) and detailed clinical handoff reports for healthcare providers.
 
-## ✨ Features
+## Key Features
+- **Multi-Agent Architecture**: Uses specialized AI agents (Medication, Scheduling, Risk, Social Determinants of Health) orchestrated by a core coordinator to generate comprehensive reports.
+- **Patient Mode**: A 5th-grade reading level translation of the patient's care plan, available in 10+ languages with text-to-speech audio narration.
+- **Clinical Overview**: A detailed transition handoff report highlighting medical overrides, social risk factors, scheduling needs, and pharmacological recommendations for the care team.
+- **Interactive Dashboard**: A beautiful, real-time UI showing the execution trajectory of the AI agents processing the patient data.
+- **Secure Authentication**: OTP-based authentication system ensuring data privacy and role-based access for both Doctors and Patients.
 
-- **Multi-Agent Architecture**: Uses discrete AI "agents" (Med Rx, Schedule, Risk, SDoH) running in parallel to analyze clinical data comprehensively.
-- **Synthesis Coordinator**: A final synthesis step compiles the consensus of all agents into a unified, actionable handoff report.
-- **Patient Mode (My Recovery Guide)**: Translates complex medical jargon into a simple, 5th-grade reading level guide for patients.
-- **Multilingual TTS**: Features text-to-speech audio narration in multiple languages (English, Hindi, Kannada, etc.) to ensure accessibility for all patients.
-- **Premium UI/UX**: Built with Tailwind CSS, utilizing glassmorphism, responsive grids, and real-time execution trajectory visualization.
+## Tech Stack
+- **Frontend**: Next.js 15, React 19, Tailwind CSS v4, Framer Motion, Lucide React
+- **Backend**: Next.js App Router (API Routes)
+- **AI Integration**: Google Gemini API via `@google/genai`
+- **Language & Styling**: TypeScript, Tailwind classes for complex UI/UX (Glassmorphism, animations)
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 caretransition-ai/
-├── app/                       # Next.js App Router 
-│   ├── api/                   # Backend API Routes
-│   │   ├── agent/             # Multi-agent specialized endpoints
-│   │   ├── analyze/           # Full pipeline entry point
-│   │   ├── evaluate/          # Trajectory evaluation
-│   │   ├── handoff/           # Final handoff compiler
-│   │   ├── health/            # System health checks
-│   │   └── patient-mode/      # Patient simplification & translation API
-│   ├── dashboard/             # Main Application Dashboard
-│   ├── globals.css            # Tailwind & Global Styles
-│   ├── layout.tsx             # Root Layout
-│   └── page.tsx               # Landing Page
-├── components/                # Reusable React Components
-│   ├── ExecutionTrajectory.tsx# Real-time agent status visualization
-│   ├── ReportView.tsx         # Clinical vs Patient view toggle and TTS
-│   ├── ui/                    # Base UI components (shadcn-like)
-│   └── ...                    
-├── lib/                       # Utility Functions & Configuration
-├── hooks/                     # Custom React Hooks
-├── assets/                    # Static Assets (Images, Icons)
-├── middleware.ts              # Next.js Edge Middleware for routing/auth
-├── next.config.ts             # Next.js Configuration
-├── tailwind.config.ts         # Tailwind CSS Configuration
-└── package.json               # Dependencies and Scripts
+├── app/                        # Next.js App Router (Pages & API)
+│   ├── api/                    # Backend API Routes
+│   │   ├── agent/              # Central agent coordinator API
+│   │   ├── auth/               # OTP generation and verification
+│   │   ├── evaluate/           # Evaluation logic for transitions
+│   │   ├── handoff/            # Handoff report generation
+│   │   ├── health/             # Health check endpoints
+│   │   └── patient-mode/       # Translation and summarization for patients
+│   ├── auth/                   # Authentication UI (Login & Verify)
+│   ├── dashboard/              # Main dashboard application UI
+│   ├── globals.css             # Global Tailwind and base styles
+│   ├── layout.tsx              # Root application layout
+│   └── page.tsx                # Landing page
+├── components/                 # React UI Components
+│   ├── auth/                   # Protected route and Auth providers
+│   ├── AuditTrail.tsx          # Diagnostic metadata display
+│   ├── ClinicianReview.tsx     # Review interface for doctors
+│   ├── ExecutionTrajectory.tsx # Multi-agent processing visualizer
+│   ├── PatientInputForm.tsx    # Form for entering raw patient data
+│   └── ReportView.tsx          # Dual-view component (Clinical/Patient)
+├── hooks/                      # Custom React Hooks
+│   └── use-mobile.ts           # Responsive layout hook
+├── lib/                        # Core Application Logic
+│   ├── agents/                 # Individual AI Agents
+│   │   ├── client.ts           # Gemini API client configuration
+│   │   ├── coordinator.ts      # Core orchestrator logic
+│   │   ├── medication.ts       # Pharmacological analysis agent
+│   │   ├── risk.ts             # Clinical risk assessment agent
+│   │   ├── scheduling.ts       # Appointments and follow-ups agent
+│   │   ├── sdoh.ts             # Social Determinants of Health agent
+│   │   └── synthesis.ts        # Final report synthesis agent
+│   ├── types/                  # TypeScript interface definitions
+│   │   └── index.ts            
+│   └── utils.ts                # General utility functions
+├── middleware.ts               # Next.js edge middleware for routing/auth
+├── next.config.ts              # Next.js configuration
+├── tailwind.config.ts          # Tailwind styling system config
+└── package.json                # Project dependencies and scripts
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
-1. **Install Dependencies:**
+1. **Clone the repository and install dependencies:**
    ```bash
    npm install
    ```
-2. **Set up Environment Variables:**
-   Create a `.env.local` file and add your Gemini API Key:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
+
+2. **Environment Setup:**
+   Create a `.env.local` file in the root directory based on `.env.example` and add your API keys (e.g., Google Gemini API key).
+   ```bash
+   GEMINI_API_KEY=your_api_key_here
    ```
+
 3. **Run the Development Server:**
    ```bash
    npm run dev
    ```
-4. **Open in Browser:**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-## 🛠️ Built With
-
-- **[Next.js 15](https://nextjs.org/)** - React Framework
-- **[React 19](https://react.dev/)** - UI Library
-- **[Tailwind CSS](https://tailwindcss.com/)** - Styling
-- **[Google Gemini API](https://ai.google.dev/)** - LLM Engine (gemini-2.5-flash)
-- **[Lucide React](https://lucide.dev/)** - Iconography
-
-## 📝 License
-
-This project is licensed under the MIT License.
+## Development Guidelines
+- Always ensure responsive design (Mobile-first approach).
+- Maintain the premium, glassmorphic UI aesthetics across new components.
+- Adhere to the established multi-agent patterns inside `lib/agents/` when extending AI capabilities.

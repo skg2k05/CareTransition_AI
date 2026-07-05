@@ -491,17 +491,18 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                    <div className="lg:col-span-2 space-y-6">
-                      <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2 font-mono">👋 Welcome Home Summary</span>
-                        <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-sans font-medium">
-                          {renderString(patientData.welcomeMessage)}
-                        </p>
-                      </div>
+                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors mb-6">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2 font-mono">Welcome Home Summary</span>
+                    <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-sans font-medium">
+                      {renderString(patientData.welcomeMessage)}
+                    </p>
+                  </div>
 
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    {/* Left Column */}
+                    <div className="space-y-6">
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3 font-mono">📋 My Checklist (Check items as you do them!)</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-3 font-mono">My Checklist (Check items as you do them!)</span>
                         
                         <div className="space-y-2.5">
                           {renderArray(patientData.dailyChecklist || patientData.checklist).map((task: string, i: number) => {
@@ -531,14 +532,10 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                           })}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <div className="flex items-center gap-2 mb-3">
                           <Pill className="w-4 h-4 text-emerald-500" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">💊 My Discharge Medications</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">My Discharge Medications</span>
                         </div>
                         
                         <div className="space-y-3">
@@ -560,11 +557,14 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                           )}
                         </div>
                       </div>
+                    </div>
 
+                    {/* Right Column */}
+                    <div className="space-y-6">
                       <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                         <div className="flex items-center gap-2 mb-3">
                           <Calendar className="w-4 h-4 text-violet-500 animate-pulse" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">📅 My Appointments</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">My Appointments</span>
                         </div>
                         
                         <div className="space-y-2.5">
@@ -584,7 +584,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                         <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 p-5 rounded-2xl transition-colors">
                           <div className="flex items-center gap-2 mb-3">
                             <HeartHandshake className="w-4 h-4 text-sky-500" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">🤝 Support & Transport Services</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">Support & Transport Services</span>
                           </div>
                           
                           <ul className="space-y-2.5">
@@ -768,59 +768,10 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 </div>
               </div>
 
-              {/* SDoH Panel */}
-              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl relative transition-colors duration-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
-                      <HeartHandshake className="w-4 h-4" />
-                    </div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Social Determinants</h4>
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20 animate-pulse">
-                    SDoH ACTIVE
-                  </span>
-                </div>
-
-                <div className="space-y-3.5 mt-3.5">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Risk Factors & Barriers:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {[...(report.sdoh?.socialRiskFactors || []), ...(report.sdoh?.barriersToCare || [])].map((factor, idx) => (
-                        <div key={idx} className="text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors">
-                          {factor}
-                        </div>
-                      ))}
-                      {(!report.sdoh?.socialRiskFactors?.length && !report.sdoh?.barriersToCare?.length) && (
-                        <span className="text-xs text-slate-500 italic">No social barriers or risks identified.</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-200 dark:border-slate-850">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Work Interventions:</span>
-                    <ul className="space-y-1.5">
-                      {(report.sdoh?.recommendations || []).map((rec, idx) => (
-                        <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/40 flex items-start gap-2 transition-colors">
-                          <ChevronRight className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                      {!report.sdoh?.recommendations?.length && (
-                        <li className="text-xs text-slate-500 italic">No custom social support recommendations.</li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Pharmacist & Scheduling Grids */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              
-              {/* Column 1: Pharmacist & Scheduling */}
+              {/* Right Column: Stacked Pharmacist and Scheduling */}
               <div className="flex flex-col gap-4">
-                {/* Medication Agent Panel */}
+                
+                {/* Pharmacist Agent Panel */}
                 <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
@@ -849,10 +800,10 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                 
                 <div className="space-y-2 mt-3.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Pharmacology Recommendations:</span>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2.5">
                     {report.medication.recommendations.map((rec, idx) => (
-                      <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/40 flex items-start gap-2">
-                        <ChevronRight className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0 mt-0.5" />
+                      <li key={idx} className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800/40 flex items-start gap-3.5 transition-colors">
+                        <ChevronRight className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0 mt-0.5" />
                         <span>{rec}</span>
                       </li>
                     ))}
@@ -888,10 +839,11 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
 
               </div>
+            </div>
 
-              {/* Column 2: SDoH */}
-              <div className="flex flex-col gap-4">
-                {/* SDoH Social Determinants Panel */}
+            {/* Row 2: SDoH Full Width */}
+            <div>
+              {/* SDoH Social Determinants Panel */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg relative transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
@@ -905,9 +857,9 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                   </span>
                 </div>
 
-                <div className="space-y-3.5 mt-3.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-slate-200 dark:border-slate-850">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Risk Factors & Barriers:</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2">Social Risk Factors & Barriers:</span>
                     <div className="flex flex-wrap gap-1.5">
                       {[...(report.sdoh?.socialRiskFactors || []), ...(report.sdoh?.barriersToCare || [])].map((factor, idx) => (
                         <div key={idx} className="text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors">
@@ -920,17 +872,17 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-200 dark:border-slate-850">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Social Work Interventions:</span>
-                    <ul className="space-y-1.5">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2">Social Work Interventions:</span>
+                    <ul className="space-y-2.5">
                       {(report.sdoh?.recommendations || []).map((rec, idx) => (
-                        <li key={idx} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/40 flex items-start gap-2 transition-colors">
-                          <ChevronRight className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <li key={idx} className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800/40 flex items-start gap-3.5 transition-colors">
+                          <ChevronRight className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                           <span>{rec}</span>
                         </li>
                       ))}
                       {!report.sdoh?.recommendations?.length && (
-                        <li className="text-xs text-slate-500 italic">No custom social support recommendations.</li>
+                        <li className="text-xs font-bold text-slate-500 italic p-3.5">No custom social support recommendations.</li>
                       )}
                     </ul>
                   </div>
@@ -938,7 +890,7 @@ ${report.sdoh.recommendations?.map(r => `  * ${r}`).join('\n') || '  * None'}
               </div>
             </div>
 
-            {/* Footer Diagnostic Metadata */}
+          {/* Footer Diagnostic Metadata */}
             <div className="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-850/50 rounded-xl px-4 py-3.5 flex items-center justify-between text-xs text-slate-500 transition-colors duration-200">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />

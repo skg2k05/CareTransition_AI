@@ -8,6 +8,9 @@ Care Transition AI is an advanced, multi-agent AI system designed to streamline 
 [![Google Gemini API](https://img.shields.io/badge/Google_Gemini-AI-orange?style=for-the-badge&logo=google)](https://ai.google.dev/)
 
 ---
+Beta Version is live : care-transition-ai.vercel.app
+
+---
 
 ## Key Features
 

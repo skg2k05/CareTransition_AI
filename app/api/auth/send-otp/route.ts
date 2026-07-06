@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+
 import Twilio from "twilio";
 import { randomInt } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -19,38 +19,37 @@ function isPhoneNumber(value: string) {
 }
 
 async function sendEmailOtp(identifier: string, otp: string) {
-	const host = process.env.EMAIL_HOST;
-	const port = process.env.EMAIL_PORT;
-	const user = process.env.EMAIL_USER;
-	const pass = process.env.EMAIL_PASS;
-	const from = process.env.EMAIL_FROM ?? user;
+	const resendKey = process.env.RESEND_API_KEY;
 
-	if (!host || !port || !user || !pass || !from) {
+	if (!resendKey) {
 		if (process.env.NODE_ENV !== "production") {
 			console.log(`[auth] OTP for ${identifier}: ${otp}`);
 			return;
 		}
 
-		throw new Error("Email service is not configured");
+		throw new Error("Resend API key is not configured");
 	}
 
-	const transporter = nodemailer.createTransport({
-		host,
-		port: Number(port),
-		secure: Number(port) === 465,
-		auth: {
-			user,
-			pass,
+	const response = await fetch("https://api.resend.com/emails", {
+		method: "POST",
+		headers: {
+			"Authorization": `Bearer ${resendKey}`,
+			"Content-Type": "application/json",
 		},
+		body: JSON.stringify({
+			from: "onboarding@resend.dev",
+			to: [identifier],
+			subject: "Your CareTransition AI OTP",
+			text: `Your OTP is ${otp}. It expires soon.`,
+			html: `<p>Your OTP is <strong>${otp}</strong>. It expires soon.</p>`,
+		}),
 	});
 
-	await transporter.sendMail({
-		from,
-		to: identifier,
-		subject: "Your CareTransition AI OTP",
-		text: `Your OTP is ${otp}. It expires soon.`,
-		html: `<p>Your OTP is <strong>${otp}</strong>. It expires soon.</p>`,
-	});
+	if (!response.ok) {
+		const err = await response.json().catch(() => null);
+		console.error("Resend error:", err);
+		throw new Error("Failed to send email via Resend");
+	}
 }
 
 async function sendSmsOtp(identifier: string, otp: string) {
@@ -98,16 +97,9 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		if (role === "doctor" && !isEmail(identifier)) {
+		if (!isEmail(identifier)) {
 			return NextResponse.json(
-				{ success: false, message: "doctor role requires a valid email address" },
-				{ status: 400 }
-			);
-		}
-
-		if (role === "patient" && !isPhoneNumber(identifier)) {
-			return NextResponse.json(
-				{ success: false, message: "patient role requires a valid phone number" },
+				{ success: false, message: "A valid email address is required" },
 				{ status: 400 }
 			);
 		}
@@ -116,15 +108,11 @@ export async function POST(request: NextRequest) {
 		const pendingOtp = {
 			identifier,
 			role,
-			totp: otp,
+			otp: otp,
 			expiresAt: Date.now() + OTP_TTL_MS,
 		};
 
-		if (role === "doctor") {
-			await sendEmailOtp(identifier, otp);
-		} else {
-			await sendSmsOtp(identifier, otp);
-		}
+		await sendEmailOtp(identifier, otp);
 
 		const response = NextResponse.json({ success: true, message: "OTP sent" });
 		response.cookies.set(PENDING_OTP_COOKIE, encodePendingOtp(pendingOtp), {

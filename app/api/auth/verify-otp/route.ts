@@ -4,7 +4,7 @@ import {
 	createJwtToken,
 	decodePendingOtp,
 	PENDING_OTP_COOKIE,
-} from "../../../_otp";
+} from "../_otp";
 
 export const dynamic = "force-dynamic";
 

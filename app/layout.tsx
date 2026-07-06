@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CareTransition AI",
   description: "Multi-Agent Clinical Discharge Coordinator",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

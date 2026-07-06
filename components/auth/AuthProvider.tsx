@@ -20,7 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (role: UserRole, identifier: string) => Promise<void>;
   verifyOTP: (otp: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,30 +41,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {
         localStorage.removeItem('caretransition_auth');
       }
+    } else {
+      document.cookie = 'caretransition_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
     }
     setIsLoading(false);
   }, []);
 
   const login = async (selectedRole: UserRole, identifier: string) => {
-    const mockOTP = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(`🔐 MOCK OTP for ${identifier} (${selectedRole}): ${mockOTP}`);
-    setPendingOTP(mockOTP);
-    
-    localStorage.setItem('caretransition_pending', JSON.stringify({
-      role: selectedRole,
-      identifier,
-      otp: mockOTP,
-      timestamp: Date.now()
-    }));
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: selectedRole, identifier })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to send OTP');
+      }
+
+      localStorage.setItem('caretransition_pending', JSON.stringify({
+        role: selectedRole,
+        identifier,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   };
 
   const verifyOTP = async (otp: string): Promise<boolean> => {
     const pending = localStorage.getItem('caretransition_pending');
     if (!pending) return false;
     
-    const { role: pendingRole, identifier, otp: correctOTP } = JSON.parse(pending);
+    const { role: pendingRole, identifier } = JSON.parse(pending);
     
-    if (otp === correctOTP) {
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, otp })
+      });
+      
+      if (!res.ok) return false;
+      
       const newUser: AuthUser = {
         id: `user_${Date.now()}`,
         role: pendingRole,
@@ -79,16 +99,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('caretransition_pending');
       document.cookie = `caretransition_auth=${newUser.id}; path=/; max-age=604800; samesite=lax`;
       return true;
+    } catch {
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     setRole(null);
     localStorage.removeItem('caretransition_auth');
     localStorage.removeItem('caretransition_pending');
-    document.cookie = 'caretransition_auth=; path=/; max-age=0; samesite=lax';
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Logout failed:', e);
+    }
   };
 
   return (

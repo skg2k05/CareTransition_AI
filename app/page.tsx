@@ -376,7 +376,8 @@ export default function App() {
             <div>
               <span className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center gap-2 transition-colors`}>
                 CareTransition AI
-                <span className="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-mono border border-emerald-500/20">v1.2</span>
+                <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-full border border-sky-400/50 text-sky-400 bg-sky-400/10 shadow-[0_0_8px_rgba(56,189,248,0.3)]">Beta</span>
+                <span className="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-mono border border-emerald-500/20 ml-1">v1.2</span>
               </span>
               <p className={`text-[9px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} font-medium`}>Multi-Agent Clinical Discharge Coordinator</p>
             </div>

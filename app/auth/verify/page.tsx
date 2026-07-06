@@ -78,9 +78,6 @@ export default function VerifyPage() {
           <p className="text-xs text-slate-400 mt-1">
             Enter the 6-digit code sent to your device.
           </p>
-          <p className="text-[10px] text-amber-400 mt-2 font-mono">
-            💡 Check browser console for mock OTP (dev mode)
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -58,6 +58,88 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
+## Project Structure
+
+```text
+├── .env.example
+├── .env.local
+├── .eslintrc.json
+├── .gitignore
+├── app
+│   ├── api
+│   │   ├── agent
+│   │   │   └── route.ts
+│   │   ├── auth
+│   │   │   ├── logout
+│   │   │   │   └── route.ts
+│   │   │   ├── send-otp
+│   │   │   │   ├── route.ts
+│   │   │   │   └── verify-otp
+│   │   │   │       └── route.ts
+│   │   │   ├── verify-otp
+│   │   │   │   └── route.ts
+│   │   │   └── _otp.ts
+│   │   ├── evaluate
+│   │   │   └── route.ts
+│   │   ├── handoff
+│   │   │   └── route.ts
+│   │   ├── health
+│   │   │   └── route.ts
+│   │   └── patient-mode
+│   │       └── route.ts
+│   ├── auth
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   └── verify
+│   │       └── page.tsx
+│   ├── dashboard
+│   │   └── page.tsx
+│   ├── error.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── not-found.tsx
+│   └── page.tsx
+├── assets
+│   └── .aistudio
+│       └── .gitignore
+├── components
+│   ├── AuditTrail.tsx
+│   ├── auth
+│   │   ├── AuthProvider.tsx
+│   │   └── ProtectedRoute.tsx
+│   ├── ClinicianReview.tsx
+│   ├── ExecutionTrajectory.tsx
+│   ├── PatientInputForm.tsx
+│   └── ReportView.tsx
+├── eslint.config.mjs
+├── hooks
+│   └── use-mobile.ts
+├── lib
+│   ├── agents
+│   │   ├── client.ts
+│   │   ├── coordinator.ts
+│   │   ├── medication.ts
+│   │   ├── risk.ts
+│   │   ├── scheduling.ts
+│   │   ├── sdoh.ts
+│   │   └── synthesis.ts
+│   ├── types
+│   │   └── index.ts
+│   └── utils.ts
+├── metadata.json
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   └── icon.svg
+├── README.md
+├── tsconfig.json
+└── tsconfig.tsbuildinfo
+```
+
 ## Architecture Overview
 
 The system runs on a **Coordinator-Worker Agent Pattern**. When clinical notes are submitted, the `CoordinatorAgent` splits the context and tasks to 4 worker agents operating in parallel:

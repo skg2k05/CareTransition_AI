@@ -17,7 +17,11 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      // If we are unauthenticated (no local storage), but middleware sent us here,
+      // it means we have a ghost HttpOnly cookie. We MUST destroy it via API.
+      fetch('/api/auth/logout', { method: 'POST' }).then(() => {
+        window.location.href = '/auth/login';
+      });
     }
     
     if (!isLoading && isAuthenticated && allowedRoles && user?.role) {

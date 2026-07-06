@@ -262,9 +262,9 @@ function DashboardContent() {
     setActiveTab('analysis');
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/auth/login');
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/auth/login';
   };
 
   // Mock patient reports for demo
@@ -304,7 +304,8 @@ function DashboardContent() {
             <div>
               <span className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
                 CareTransition AI
-                <span className="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-mono border border-emerald-500/20">
+                <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-full border border-sky-400/50 text-sky-400 bg-sky-400/10 shadow-[0_0_8px_rgba(56,189,248,0.3)]">Beta</span>
+                <span className="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-mono border border-emerald-500/20 ml-1">
                   {isDoctor ? 'DOCTOR' : 'PATIENT'}
                 </span>
               </span>

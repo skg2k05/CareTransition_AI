@@ -8,7 +8,7 @@ import { Stethoscope, User, ArrowRight, Loader2, Smartphone, Mail } from 'lucide
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [role, setRole] = useState<'doctor' | 'patient'>('patient');
+  const [role, setRole] = useState<'doctor' | 'patient'>('doctor');
   const [identifier, setIdentifier] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +35,10 @@ export default function LoginPage() {
           <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
             <Stethoscope className="w-6 h-6 text-emerald-400" />
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">CareTransition AI</h1>
+          <h1 className="text-xl font-bold text-white tracking-tight flex items-center justify-center gap-2">
+            CareTransition AI
+            <span className="text-[10px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full border border-sky-400/50 text-sky-400 bg-sky-400/10 shadow-[0_0_10px_rgba(56,189,248,0.3)]">Beta</span>
+          </h1>
           <p className="text-xs text-slate-400 mt-1">Secure OTP Login — No Passwords Needed</p>
         </div>
 
@@ -72,27 +75,21 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs font-semibold text-slate-300 block mb-2">
-              {role === 'doctor' ? 'Email Address' : 'Mobile Number'}
+              Email Address
             </label>
             <div className="relative">
-              {role === 'doctor' ? (
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              ) : (
-                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              )}
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input
-                type={role === 'doctor' ? 'email' : 'tel'}
+                type="email"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder={role === 'doctor' ? 'dr.name@hospital.com' : '+91 98765 43210'}
+                placeholder={role === 'doctor' ? 'dr.name@hospital.com' : 'patient@example.com'}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                 required
               />
             </div>
             <p className="text-[10px] text-slate-500 mt-1.5">
-              {role === 'doctor' 
-                ? 'We will send a 6-digit OTP to your email.' 
-                : 'We will send a 6-digit OTP via SMS to your mobile.'}
+              We will send a 6-digit OTP to your email.
             </p>
           </div>
 

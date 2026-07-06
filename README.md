@@ -1,84 +1,78 @@
-# Care Transition AI
+# Care Transition AI 🏥✨
 
-Care Transition AI is an advanced, multi-agent AI system designed to streamline the hospital discharge and patient transition process. It provides personalized, plain-language patient recovery guides (translated into multiple languages with voice support) and detailed clinical handoff reports for healthcare providers.
+Care Transition AI is an advanced, multi-agent AI system designed to streamline the hospital discharge and patient transition process. It eliminates dangerous communication gaps between clinical teams and patients by providing real-time, comprehensive clinical handoff reports for doctors and personalized, plain-language recovery guides for patients.
 
-## Key Features
-- **Multi-Agent Architecture**: Uses specialized AI agents (Medication, Scheduling, Risk, Social Determinants of Health) orchestrated by a core coordinator to generate comprehensive reports.
-- **Patient Mode**: A 5th-grade reading level translation of the patient's care plan, available in 10+ languages with text-to-speech audio narration.
-- **Clinical Overview**: A detailed transition handoff report highlighting medical overrides, social risk factors, scheduling needs, and pharmacological recommendations for the care team.
-- **Interactive Dashboard**: A beautiful, real-time UI showing the execution trajectory of the AI agents processing the patient data.
-- **Secure Authentication**: OTP-based authentication system ensuring data privacy and role-based access for both Doctors and Patients.
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Google Gemini API](https://img.shields.io/badge/Google_Gemini-AI-orange?style=for-the-badge&logo=google)](https://ai.google.dev/)
 
-## Tech Stack
-- **Frontend**: Next.js 15, React 19, Tailwind CSS v4, Framer Motion, Lucide React
-- **Backend**: Next.js App Router (API Routes)
-- **AI Integration**: Google Gemini API via `@google/genai`
-- **Language & Styling**: TypeScript, Tailwind classes for complex UI/UX (Glassmorphism, animations)
+---
 
-## Project Structure
+## 🌟 Key Features
 
-```text
-caretransition-ai/
-├── app/                        # Next.js App Router (Pages & API)
-│   ├── api/                    # Backend API Routes
-│   │   ├── agent/              # Central agent coordinator API
-│   │   ├── auth/               # OTP generation and verification
-│   │   ├── evaluate/           # Evaluation logic for transitions
-│   │   ├── handoff/            # Handoff report generation
-│   │   ├── health/             # Health check endpoints
-│   │   └── patient-mode/       # Translation and summarization for patients
-│   ├── auth/                   # Authentication UI (Login & Verify)
-│   ├── dashboard/              # Main dashboard application UI
-│   ├── globals.css             # Global Tailwind and base styles
-│   ├── layout.tsx              # Root application layout
-│   └── page.tsx                # Landing page
-├── components/                 # React UI Components
-│   ├── auth/                   # Protected route and Auth providers
-│   ├── AuditTrail.tsx          # Diagnostic metadata display
-│   ├── ClinicianReview.tsx     # Review interface for doctors
-│   ├── ExecutionTrajectory.tsx # Multi-agent processing visualizer
-│   ├── PatientInputForm.tsx    # Form for entering raw patient data
-│   └── ReportView.tsx          # Dual-view component (Clinical/Patient)
-├── hooks/                      # Custom React Hooks
-│   └── use-mobile.ts           # Responsive layout hook
-├── lib/                        # Core Application Logic
-│   ├── agents/                 # Individual AI Agents
-│   │   ├── client.ts           # Gemini API client configuration
-│   │   ├── coordinator.ts      # Core orchestrator logic
-│   │   ├── medication.ts       # Pharmacological analysis agent
-│   │   ├── risk.ts             # Clinical risk assessment agent
-│   │   ├── scheduling.ts       # Appointments and follow-ups agent
-│   │   ├── sdoh.ts             # Social Determinants of Health agent
-│   │   └── synthesis.ts        # Final report synthesis agent
-│   ├── types/                  # TypeScript interface definitions
-│   │   └── index.ts            
-│   └── utils.ts                # General utility functions
-├── middleware.ts               # Next.js edge middleware for routing/auth
-├── next.config.ts              # Next.js configuration
-├── tailwind.config.ts          # Tailwind styling system config
-└── package.json                # Project dependencies and scripts
+- **Multi-Agent Architecture**: Powered by specialized AI agents (Medication, Scheduling, Risk, Social Determinants of Health) orchestrated by a core coordinator to analyze raw EMR data in parallel.
+- **Patient Mode (Health Literacy)**: Automatically translates complex medical jargon into a 5th-grade reading level care plan, available in 10+ languages with text-to-speech audio support.
+- **Clinical Handoff Dashboard**: A detailed, structured transition handoff report highlighting medical overrides, social risk factors, scheduling needs, and pharmacological interactions for the receiving care team.
+- **Interactive UI**: A beautiful, real-time interface built with Glassmorphism aesthetics and smooth Framer Motion animations that visualizes the execution trajectory of the AI agents processing the patient data.
+- **Secure Passwordless Auth**: State-of-the-art OTP (One-Time Password) email authentication system using **Resend**, ensuring data privacy and strict role-based access control (Doctor vs. Patient).
+
+## 💻 Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **UI Library**: React 19
+- **Styling**: Tailwind CSS v4, Framer Motion, Lucide React
+- **AI Integration**: Google Gemini API (`@google/genai`)
+- **Authentication Services**: Resend API (Email OTP)
+- **Language**: TypeScript
+
+## 🚀 Getting Started
+
+Follow these instructions to set up the project locally.
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/YOUR_USERNAME/caretransition-ai.git
+cd caretransition-ai
 ```
 
-## Getting Started
+### 2. Install dependencies
+```bash
+npm install
+```
 
-1. **Clone the repository and install dependencies:**
-   ```bash
-   npm install
-   ```
+### 3. Environment Setup
+Create a `.env.local` file in the root directory and add your API keys:
+```bash
+# Google Gemini for AI Agents
+GEMINI_API_KEY="your_google_gemini_api_key_here"
 
-2. **Environment Setup:**
-   Create a `.env.local` file in the root directory based on `.env.example` and add your API keys (e.g., Google Gemini API key).
-   ```bash
-   GEMINI_API_KEY=your_api_key_here
-   ```
+# Resend for Email OTP Authentication
+RESEND_API_KEY="re_your_resend_api_key_here"
+```
+*(You can get a Gemini API key from [Google AI Studio](https://aistudio.google.com/) and a Resend API key from [Resend.com](https://resend.com/)).*
 
-3. **Run the Development Server:**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+### 4. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-## Development Guidelines
+## 📁 Architecture Overview
+
+The system runs on a **Coordinator-Worker Agent Pattern**. When clinical notes are submitted, the `CoordinatorAgent` splits the context and tasks to 4 worker agents operating in parallel:
+1. `MedicationAgent`: Analyzes polypharmacy risks and generates the medication regimen.
+2. `RiskAgent`: Evaluates readmission and clinical deterioration risks.
+3. `SDOHAgent`: Identifies Social Determinants of Health (e.g., transportation, housing).
+4. `SchedulingAgent`: Maps out follow-up appointments and lab timelines.
+
+Once the parallel processing finishes, the `SynthesisAgent` aggregates their findings into a cohesive JSON schema, which powers the beautiful Dual-View Dashboard.
+
+## 🤝 Contributing
+Contributions, issues, and feature requests are welcome! 
 - Always ensure responsive design (Mobile-first approach).
-- Maintain the premium, glassmorphic UI aesthetics across new components.
-- Adhere to the established multi-agent patterns inside `lib/agents/` when extending AI capabilities.
+- Maintain the premium, glassmorphic UI aesthetics.
+- Adhere to the established multi-agent pattern inside `lib/agents/` when extending AI capabilities.
+
+## 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.

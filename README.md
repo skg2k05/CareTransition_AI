@@ -1,4 +1,4 @@
-# Care Transition AI 🏥✨
+# Care Transition AI
 
 Care Transition AI is an advanced, multi-agent AI system designed to streamline the hospital discharge and patient transition process. It eliminates dangerous communication gaps between clinical teams and patients by providing real-time, comprehensive clinical handoff reports for doctors and personalized, plain-language recovery guides for patients.
 
@@ -9,7 +9,7 @@ Care Transition AI is an advanced, multi-agent AI system designed to streamline 
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 - **Multi-Agent Architecture**: Powered by specialized AI agents (Medication, Scheduling, Risk, Social Determinants of Health) orchestrated by a core coordinator to analyze raw EMR data in parallel.
 - **Patient Mode (Health Literacy)**: Automatically translates complex medical jargon into a 5th-grade reading level care plan, available in 10+ languages with text-to-speech audio support.
@@ -17,7 +17,7 @@ Care Transition AI is an advanced, multi-agent AI system designed to streamline 
 - **Interactive UI**: A beautiful, real-time interface built with Glassmorphism aesthetics and smooth Framer Motion animations that visualizes the execution trajectory of the AI agents processing the patient data.
 - **Secure Passwordless Auth**: State-of-the-art OTP (One-Time Password) email authentication system using **Resend**, ensuring data privacy and strict role-based access control (Doctor vs. Patient).
 
-## 💻 Tech Stack
+## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
 - **UI Library**: React 19
@@ -26,7 +26,7 @@ Care Transition AI is an advanced, multi-agent AI system designed to streamline 
 - **Authentication Services**: Resend API (Email OTP)
 - **Language**: TypeScript
 
-## 🚀 Getting Started
+## Getting Started
 
 Follow these instructions to set up the project locally.
 
@@ -50,7 +50,7 @@ GEMINI_API_KEY="your_google_gemini_api_key_here"
 # Resend for Email OTP Authentication
 RESEND_API_KEY="re_your_resend_api_key_here"
 ```
-*(You can get a Gemini API key from [Google AI Studio](https://aistudio.google.com/) and a Resend API key from [Resend.com](https://resend.com/)).*
+*(You can get a Gemini API key from [Google AI Studio](https://aistudio.google.com/)*
 
 ### 4. Run the Development Server
 ```bash
@@ -58,7 +58,7 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 ├── .env.example
@@ -140,7 +140,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 └── tsconfig.tsbuildinfo
 ```
 
-## 📁 Architecture Overview
+## Architecture Overview
 
 The system runs on a **Coordinator-Worker Agent Pattern**. When clinical notes are submitted, the `CoordinatorAgent` splits the context and tasks to 4 worker agents operating in parallel:
 1. `MedicationAgent`: Analyzes polypharmacy risks and generates the medication regimen.
@@ -150,11 +150,11 @@ The system runs on a **Coordinator-Worker Agent Pattern**. When clinical notes a
 
 Once the parallel processing finishes, the `SynthesisAgent` aggregates their findings into a cohesive JSON schema, which powers the beautiful Dual-View Dashboard.
 
-## 🤝 Contributing
+## Contributing
 Contributions, issues, and feature requests are welcome! 
 - Always ensure responsive design (Mobile-first approach).
 - Maintain the premium, glassmorphic UI aesthetics.
 - Adhere to the established multi-agent pattern inside `lib/agents/` when extending AI capabilities.
 
-## 📄 License
+## License
 This project is licensed under the MIT License - see the LICENSE file for details.

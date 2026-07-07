@@ -34,7 +34,7 @@ Follow these instructions to set up the project locally.
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/caretransition-ai.git
+git clone https://github.com/skg2k05/CareTransition_AI.git
 cd caretransition-ai
 ```
 

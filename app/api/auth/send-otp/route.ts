@@ -3,6 +3,7 @@ import Twilio from "twilio";
 import { randomInt } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { encodePendingOtp, OTP_TTL_MS, PENDING_OTP_COOKIE, type Role } from "../_otp";
+import nodemailer from "nodemailer";
 
 export const dynamic = "force-dynamic";
 
@@ -19,36 +20,36 @@ function isPhoneNumber(value: string) {
 }
 
 async function sendEmailOtp(identifier: string, otp: string) {
-	const resendKey = process.env.RESEND_API_KEY;
+	const emailUser = process.env.EMAIL_USER;
+	const emailPass = process.env.EMAIL_APP_PASSWORD;
 
-	if (!resendKey) {
+	if (!emailUser || !emailPass) {
 		if (process.env.NODE_ENV !== "production") {
 			console.log(`[auth] OTP for ${identifier}: ${otp}`);
 			return;
 		}
-
-		throw new Error("Resend API key is not configured");
+		throw new Error("Email credentials are not configured");
 	}
 
-	const response = await fetch("https://api.resend.com/emails", {
-		method: "POST",
-		headers: {
-			"Authorization": `Bearer ${resendKey}`,
-			"Content-Type": "application/json",
+	const transporter = nodemailer.createTransport({
+		service: "gmail",
+		auth: {
+			user: emailUser,
+			pass: emailPass,
 		},
-		body: JSON.stringify({
-			from: "onboarding@resend.dev",
-			to: [identifier],
+	});
+
+	try {
+		await transporter.sendMail({
+			from: `"CareTransition AI" <${emailUser}>`,
+			to: identifier,
 			subject: "Your CareTransition AI OTP",
 			text: `Your OTP is ${otp}. It expires soon.`,
 			html: `<p>Your OTP is <strong>${otp}</strong>. It expires soon.</p>`,
-		}),
-	});
-
-	if (!response.ok) {
-		const err = await response.json().catch(() => null);
-		console.error("Resend error:", err);
-		throw new Error("Failed to send email via Resend");
+		});
+	} catch (error) {
+		console.error("Nodemailer error:", error);
+		throw new Error("Failed to send email via Nodemailer");
 	}
 }
 

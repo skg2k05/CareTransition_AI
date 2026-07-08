@@ -7,7 +7,7 @@ Care Transition AI is an advanced, multi-agent AI system designed to streamline 
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Google Gemini API](https://img.shields.io/badge/Google_Gemini-AI-orange?style=for-the-badge&logo=google)](https://ai.google.dev/)
 
-Beta Version will be live soon!
+Beta Version is live: [care-transition-ai.vercel.app](https://care-transition-ai.vercel.app/)
 
 ---
 
@@ -53,6 +53,8 @@ GEMINI_API_KEY="your_google_gemini_api_key_here"
 RESEND_API_KEY="re_your_resend_api_key_here"
 ```
 *(You can get a Gemini API key from [Google AI Studio](https://aistudio.google.com/)*
+*(You can get a Resend API key from [Resend](https://resend.com/)*
+
 
 ### 4. Run the Development Server
 ```bash
